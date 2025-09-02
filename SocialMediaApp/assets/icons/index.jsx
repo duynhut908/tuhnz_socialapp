@@ -24,6 +24,8 @@ import Video from './Video';
 import Notify from './Notify';
 import Story from './Story';
 import Friends from './Friends';
+import Menu from './Menu';
+import MenuStraight from './MenuStraight';
 
 const icons = {
     home: Home,
@@ -34,7 +36,7 @@ const icons = {
     delete: Delete,
     edit: Edit,
     heart: Heart,
-    Image: Image,
+    image: Image,
     location: Location,
     lock: Lock,
     logout: Logout,
@@ -48,10 +50,14 @@ const icons = {
     video: Video,
     notify: Notify,
     story: Story,
-    friends: Friends
+    friends: Friends,
+    menu: Menu,
+    menustraight: MenuStraight
 }
+
 const Icon = ({ name, ...props }) => {
     const IconComponent = icons[name];
+    if (!IconComponent) return null; // tránh undefined gây crash
     return (
         <IconComponent
             height={props.size || 24}

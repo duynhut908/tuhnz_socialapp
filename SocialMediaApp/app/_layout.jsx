@@ -1,13 +1,13 @@
 import { View, Text } from 'react-native'
 import React from 'react'
-import { Stack } from 'expo-router'
+import { Slot, Stack } from 'expo-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../context/AuthContext';
 
 
 const queryClient = new QueryClient();
 const _layout = () => {
-    
+
     return (
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
@@ -16,7 +16,9 @@ const _layout = () => {
                     screenOptions={{
                         headerShown: false
                     }}
-                />
+                >
+                    <Slot />
+                </Stack>
             </QueryClientProvider>
         </AuthProvider>
 
