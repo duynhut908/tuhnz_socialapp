@@ -60,7 +60,7 @@ const profile = () => {
 
 const UserHeader = ({ user, router, handleLogout }) => {
   return (
-    <View style={styles.headerProfile}>
+    <View style={styles.header}>
       <View>
         <Header title="Profile" showBackButton={true} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     flex: 1,
     //paddingHorizontal: wp(4)
   },
-  headerProfile: {
+  header: {
     paddingTop: 10,
     paddingBottom: 10,
     paddingHorizontal: 5,

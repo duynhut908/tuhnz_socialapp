@@ -6,6 +6,7 @@ import { theme } from '../constants/theme'
 import Header from '../components/Header'
 import { useLocalSearchParams, useRouter, useSearchParams } from 'expo-router';
 import Icon from '../assets/icons'
+import Picture from '../components/Picture'
 
 const album = ({ }) => {
 
@@ -26,20 +27,14 @@ const album = ({ }) => {
                     ...StyleSheet.absoluteFillObject,
                     backgroundColor: 'rgba(0,0,0,0.5)', // darken ảnh
                 }} />
-                <UserHeader user={note} router={router} />
+                <View style={styles.header}>
+                    <View>
+                        <Header title="New Post" showBackButton={true} />
+                    </View>
+                </View >
                 <MyAlbum user={note} router={router} />
             </ImageBackground>
         </SrceenWrapper>
-    )
-}
-
-const UserHeader = ({ user, router }) => {
-    return (
-        <View style={styles.headerProfile}>
-            <View>
-                <Header title="Profile" showBackButton={true} />
-            </View>
-        </View >
     )
 }
 
@@ -64,6 +59,7 @@ const TypeAlbum = ({ user, router, titleAlbum, time, maxDisplay }) => {
                     const isLast = index === maxDisplay - 1 && time > maxDisplay;
                     return (
                         <View key={index} style={styles.oneImage}>
+                            <Picture size={hp(11)} />
                             {isLast && (
                                 <View style={styles.plusOverlay}>
                                     <Text style={styles.plusText}>+{time - maxDisplay}</Text>
@@ -83,7 +79,7 @@ const styles = StyleSheet.create({
         flex: 1,
         //paddingHorizontal: wp(4)
     },
-    headerProfile: {
+    header: {
         paddingTop: 10,
         paddingBottom: 10,
         paddingHorizontal: 5,
@@ -91,15 +87,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 0.5,
         borderColor: '#c4d3d9',      // màu viền
         justifyContent: 'center'
-    },
-    logoutButton: {
-        position: 'absolute',
-        right: 5,
-        top: "50%",                   // đẩy nút xuống giữa
-        transform: [{ translateY: -17 }],
-        padding: 5,
-        borderRadius: theme.radius.sm,
-        backgroundColor: 'rgba(0,0,0,0.5)'
     },
     myAlbumContainer: {
         flex: 1,
