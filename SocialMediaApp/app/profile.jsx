@@ -203,40 +203,6 @@ const MyProfile = ({ user, router }) => {
   )
 }
 
-const MyAlbum = ({ user, router }) => {
-  const maxDisplay = 4; // hiển thị tối đa 4 ảnh
-  return (
-    <View style={styles.myAlbumContainer}>
-
-      <TypeAlbum time={2} maxDisplay={maxDisplay} titleAlbum="MY AVATAR" />
-
-      <TypeAlbum time={13} maxDisplay={maxDisplay} titleAlbum="MY IMAGE" />
-    </View>
-  )
-}
-
-const TypeAlbum = ({ user, router, titleAlbum, time, maxDisplay }) => {
-  const displayImages = Array.from({ length: Math.min(time, maxDisplay) });
-  return (
-    <View style={{ gap: 15 }}>
-      <Text style={styles.titleAlbum}>{titleAlbum}</Text>
-      <View style={styles.someImage}>
-        {displayImages.map((_, index) => {
-          const isLast = index === maxDisplay - 1 && time > maxDisplay;
-          return (
-            <View key={index} style={styles.oneImage}>
-              {isLast && (
-                <View style={styles.plusOverlay}>
-                  <Text style={styles.plusText}>+{time - maxDisplay}</Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  )
-}
 
 export default profile
 
