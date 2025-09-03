@@ -211,6 +211,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     //paddingHorizontal: wp(4)
+    backgroundColor: "#000",
   },
   header: {
     paddingTop: 10,
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     height: hp(7),
     borderBottomWidth: 0.5,
     borderColor: '#c4d3d9',      // màu viền
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   logoutButton: {
     position: 'absolute',

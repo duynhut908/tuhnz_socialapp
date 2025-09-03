@@ -14,10 +14,14 @@ const _layout = () => {
                 <Stack
                     initialRouteName="homeapp"
                     screenOptions={{
-                        headerShown: false
-                    }}
+                        headerShown: false,
+                       // presentation: "containedTransparentModal",
+                        animation: "slide_from_right",
+                    }} 
+                    
                 >
-                    <Slot />
+                    
+                      <Slot />
                 </Stack>
             </QueryClientProvider>
         </AuthProvider>
