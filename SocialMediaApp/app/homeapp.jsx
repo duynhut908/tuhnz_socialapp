@@ -8,6 +8,8 @@ import { hp, wp } from '../helpers/common'
 import { StatusBar } from 'expo-status-bar'
 import { theme } from '../constants/theme'
 import Icon from '../assets/icons'
+import APost from '../components/APost'
+import Posts from '../components/Posts'
 
 const homeapp = () => {
     const router = useRouter();
@@ -71,12 +73,14 @@ const homeapp = () => {
                             <Icon name="mail" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' />
                         </Pressable>
                         <Pressable>
-                            <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9'  onPress={() => router.push('profile')}/>
+                            <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('profile')} />
                         </Pressable>
                     </View>
                 </View>
                 <View style={styles.body}>
-                    <Text style={{ color: 'white' }}>BODY</Text>
+
+                    <Posts/> 
+
                 </View>
                 <View style={styles.footer}>
                     <Pressable style={styles.iconsFooter}>

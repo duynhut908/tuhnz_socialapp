@@ -12,12 +12,16 @@ const _layout = () => {
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
                 <Stack
-                    initialRouteName="newPost"
+                    initialRouteName="homeapp"
                     screenOptions={{
-                        headerShown: false
-                    }}
+                        headerShown: false,
+                       // presentation: "containedTransparentModal",
+                        animation: "slide_from_right",
+                    }} 
+                    
                 >
-                    <Slot />
+                    
+                      <Slot />
                 </Stack>
             </QueryClientProvider>
         </AuthProvider>
