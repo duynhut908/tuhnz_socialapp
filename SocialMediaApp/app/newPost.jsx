@@ -1,5 +1,5 @@
-import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useRef, useState } from 'react'
+import { Alert, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import SrceenWrapper from '../components/SrceenWrapper';
 import Header from '../components/Header';
@@ -12,7 +12,9 @@ import Icon from '../assets/icons';
 import Button from '../components/Button';
 import * as ImagePicker from 'expo-image-picker'
 import { cloudinaryUpload, cloudinaryDeleteImage } from '../api/axiosUpload';
-
+import { Video } from 'expo-av';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { makeRequest } from '../api/axios';
 const newPost = () => {
     // const router = useRouter();
     // const params = useLocalSearchParams(); // trả về object chứa tất cả params
@@ -24,22 +26,22 @@ const newPost = () => {
     const editorRef = useRef(null)
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [imageLink, setImageLink] = useState(null);
-    const [publicIdImage, setPublicIdImage] = useState(null)
+    const [imageList, setImageList] = useState([]);
     const uploadPicture = async (formData) => {
+        if (loading) return;
         try {
             setLoading(true); // Bắt đầu hiển thị loading
             const response = await cloudinaryUpload(formData);
-            console.log(response)
-            console.log(response.secure_url)
-            setImageLink(response.secure_url); // Gán link ảnh vào state
-            setPublicIdImage(response.publicId)
+            console.log("response" + response)
+            setImageList(prev => [
+                ...prev,
+                { url: response.secure_url, publicId: response.publicId, type: response.type }
+            ]);
 
         } catch (error) {
             console.error('Error uploading image:', error);
         } finally {
-            setLoading(false); // Ẩn loading sau khi xử lý xong
-            console.log(imageLink)
+            setLoading(false);
         }
     }
     const onPick = async (isImage) => {
@@ -90,23 +92,47 @@ const newPost = () => {
 
         return 'video';
     }
-    const deleteImageLink = async () => {
-        if (!imageLink || !publicIdImage) return;
+    const deleteImageLink = async (publicId, resourceType) => {
+        if (imageList.length < 1) return;
         // publicId lấy từ path, ví dụ res.data.file.filename hoặc folder/filename
         try {
             setLoading(true); // Bắt đầu hiển thị loading
-            const response = await cloudinaryDeleteImage(publicIdImage);
+            const response = await cloudinaryDeleteImage(publicId, resourceType);
             console.log(response)
 
         } catch (error) {
             console.error('Error uploading image in fontend:', error);
         } finally {
-            setImageLink(null);
-            setPublicIdImage(null);
+            setImageList(prev => prev.filter(img => img.publicId !== publicId));
             setLoading(false);
         }
     }
+
+    const queryClient = useQueryClient()
+
+    const mutation = useMutation({
+        mutationFn: (post) => makeRequest.post(`/posts`, post),
+        onSuccess: () => {
+            // Làm mới dữ liệu sau khi mutation thành công
+            queryClient.invalidateQueries({ queryKey: ['posts', currentUser] });
+        },
+        onError: (error) => {
+            console.error("Mutation failed:", error);
+        },
+    })
+
     const onSubmit = async () => {
+        try {
+
+            mutation.mutate({ desc: bodyRef.current, listImages: imageList });
+        } catch (error) {
+            Alert.alert("Errol", error);
+        } finally {
+
+            bodyRef.current = "";
+
+            router.back()
+        }
 
     }
     return (
@@ -139,27 +165,43 @@ const newPost = () => {
                     </View>
 
                     <View style={styles.textEditor}>
-                        <RichTextEditor editorRef={editorRef} onChange={body => bodyRef.current = body} />
+                        <RichTextEditor editorRef={editorRef} onChange={body => {
+                            bodyRef.current = body;
+                        }} />
                     </View>
-                    {imageLink && (
-                        <View style={styles.file}>
+                    {imageList.length > 0 && (
+                        imageList.map((image) =>
+                        (image.type === 'image' ? <View key={image.publicId} style={styles.file}>
                             <Image
                                 resizeMode='cover'
-                                source={{ uri: imageLink }}
+                                source={{ uri: image.url }}
                                 style={{ flex: 1 }}
                             />
-                            <Pressable style={styles.closeIcon} onPress={() => deleteImageLink()}>
+                            <Pressable disabled={loading} style={styles.closeIcon} onPress={() => deleteImageLink(image.publicId, image.type)}>
                                 <Icon name='delete' size={20} color='#ccc' />
                             </Pressable>
-                        </View>
+                        </View> :
+                            <View key={image.publicId} style={styles.file}>
+                                <Video
+                                    style={{ flex: 1 }}
+                                    source={{ uri: image.url }}
+                                    useNativeControls
+                                    resizeMode='cover'
+                                    isLooping
+                                />
+                                <Pressable disabled={loading} style={styles.closeIcon} onPress={() => deleteImageLink(image.publicId, image.type)}>
+                                    <Icon name='delete' size={20} color='#ccc' />
+                                </Pressable>
+                            </View>)
+                        )
                     )}
                     <View style={styles.media}>
                         <Text style={styles.addImage}>Add to your post</Text>
                         <View style={styles.mediaIcons}>
-                            <TouchableOpacity onPress={() => onPick(true)}>
+                            <TouchableOpacity disabled={loading} onPress={() => onPick(true)}>
                                 <Icon name="image" size={30} color="green" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => onPick(false)}>
+                            <TouchableOpacity disabled={loading} onPress={() => onPick(false)}>
                                 <Icon name="video" size={32} color="green" />
                             </TouchableOpacity>
                         </View>
@@ -169,7 +211,10 @@ const newPost = () => {
                     title="Post"
                     loading={loading}
                     hasShadow={false}
-                    onPress={onSubmit}
+                    onPress={() => {
+                        console.log("Button pressed");
+                        onSubmit();
+                    }}
                 />
             </ImageBackground >
         </SrceenWrapper >

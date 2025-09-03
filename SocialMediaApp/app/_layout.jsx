@@ -12,7 +12,7 @@ const _layout = () => {
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
                 <Stack
-                    initialRouteName="newPost"
+                    initialRouteName="homeapp"
                     screenOptions={{
                         headerShown: false
                     }}

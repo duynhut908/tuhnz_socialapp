@@ -40,7 +40,9 @@ const RichTextEditor = ({
                 containerStyle={styles.rich}
                 editorStyle={styles.contentStyle}
                 placeholder={"What's on your mind"}
-                onChange={onChange}
+                onChange={(body) => {
+                    onChange(body);
+                }}
             >
                 <View style={{
                     ...StyleSheet.absoluteFillObject,

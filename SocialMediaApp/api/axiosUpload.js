@@ -12,11 +12,13 @@ const cloudinaryUpload = (fileToUpload) => {
             throw new Error('Error uploading image');
         });
 }
-const cloudinaryDeleteImage = async (publicId) => {
+const cloudinaryDeleteImage = async (publicId, resourceType) => {
+  console.log(publicId)
+  console.log(resourceType)
     if (!publicId) throw new Error("No publicId provided");
     try {
-      const res = await makeRequest.delete("/uploads/cloudinary-deleteImage", {
-        data: { publicId }
+      const res = await makeRequest.delete("/uploads/cloudinary-delete", {
+        data: { publicId, resourceType }
       });
       return res.data;
     } catch (err) {

@@ -26,7 +26,8 @@ import Story from './Story';
 import Friends from './Friends';
 import Menu from './Menu';
 import MenuStraight from './MenuStraight';
-
+import Messages from './Messages';
+import NewPost from './NewPost';
 const icons = {
     home: Home,
     arrowleft: ArrowLeft,
@@ -52,7 +53,9 @@ const icons = {
     story: Story,
     friends: Friends,
     menu: Menu,
-    menustraight: MenuStraight
+    menustraight: MenuStraight,
+    messages: Messages,
+    newPost: NewPost,
 }
 
 const Icon = ({ name, ...props }) => {

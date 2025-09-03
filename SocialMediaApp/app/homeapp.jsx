@@ -12,16 +12,16 @@ import Icon from '../assets/icons'
 const homeapp = () => {
     const router = useRouter();
     //Mở lại nếu xong
-    // const { currentUser, handleLogout } = useContext(AuthContext)
-    // useEffect(() => {
-    //     if (!currentUser && router) {
-    //         // đảm bảo router đã sẵn sàng
-    //         setTimeout(() => {
-    //             router.replace("welcome");
-    //         }, 0);
-    //     }
-    // }, [currentUser]);
-    // console.log(currentUser)
+    const { currentUser, handleLogout } = useContext(AuthContext)
+    useEffect(() => {
+        if (!currentUser && router) {
+            // đảm bảo router đã sẵn sàng
+            setTimeout(() => {
+                router.replace("welcome");
+            }, 0);
+        }
+    }, [currentUser]);
+    console.log(currentUser)
     const [loading, setLoading] = useState(false)
 
     const onSubmit = async () => {
@@ -34,9 +34,9 @@ const homeapp = () => {
         }
     }
     //Mở lại nếu xong
-    // if (!currentUser) {
-    //      return null;
-    //  }
+    if (!currentUser) {
+         return null;
+     }
     return (
         <SrceenWrapper bg="white">
             <StatusBar style="dark" />
@@ -65,10 +65,10 @@ const homeapp = () => {
 
                     <View style={styles.icons}>
                         <Pressable>
-                            <Icon name="notify" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' />
+                            <Icon name="newPost" size={hp(3.5)} strokeWidth={2} color='#c4d3d9'  onPress={() => router.push('newPost')}/>
                         </Pressable>
                         <Pressable>
-                            <Icon name="mail" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' />
+                            <Icon name="messages" size={hp(4)} strokeWidth={2} color='#c4d3d9' />
                         </Pressable>
                         <Pressable>
                             <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9'  onPress={() => router.push('profile')}/>
@@ -86,7 +86,7 @@ const homeapp = () => {
                         <Icon name="search" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
                     </Pressable>
                     <Pressable style={styles.iconsFooter}>
-                        <Icon name="friends" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
+                        <Icon name="notify" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
                     </Pressable>
                     <Pressable style={styles.iconsFooter}>
                         <Icon name="more" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
