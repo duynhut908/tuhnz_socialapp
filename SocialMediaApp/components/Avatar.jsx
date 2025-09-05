@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const Avatar = ({ size }) => {
+const Avatar = ({ size, link }) => {
     return (
         <View style={[styles.container,
         {
@@ -9,7 +9,7 @@ const Avatar = ({ size }) => {
             height: size,
             borderRadius: size / 2
         }]}>
-            <Image style={styles.avatarImage} resizeMode='cover' source={require('../assets/images/avatar.jpg')} />
+            <Image style={styles.avatarImage} resizeMode='cover' source={link ? { uri: link } : require('../assets/images/avatar.png')} />
         </View>
     )
 }

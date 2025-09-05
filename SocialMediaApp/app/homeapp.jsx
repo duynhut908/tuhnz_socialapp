@@ -8,22 +8,23 @@ import { hp, wp } from '../helpers/common'
 import { StatusBar } from 'expo-status-bar'
 import { theme } from '../constants/theme'
 import Icon from '../assets/icons'
-import APost from '../components/APost'
 import Posts from '../components/Posts'
+import { useQuery } from '@tanstack/react-query'
+import { makeRequest } from '../api/axios'
 
 const homeapp = () => {
     const router = useRouter();
     //Mở lại nếu xong
     const { currentUser, handleLogout } = useContext(AuthContext)
-    useEffect(() => {
-        if (!currentUser && router) {
-            // đảm bảo router đã sẵn sàng
-            setTimeout(() => {
-                router.replace("welcome");
-            }, 0);
-        }
-    }, [currentUser]);
-    console.log(currentUser)
+    // useEffect(() => {
+    //     if (!currentUser && router) {
+    //         // đảm bảo router đã sẵn sàng
+    //         setTimeout(() => {
+    //             router.replace("welcome");
+    //         }, 0);
+    //     }
+    // }, [currentUser]);
+    // console.log(currentUser)
     const [loading, setLoading] = useState(false)
 
     const onSubmit = async () => {
@@ -35,23 +36,17 @@ const homeapp = () => {
             console.log(err)
         }
     }
-    //Mở lại nếu xong
-    if (!currentUser) {
-         return null;
-     }
+ 
+    const { isLoading, error, data } = useQuery({
+        queryKey: ["posts", currentUser], queryFn: () =>
+            makeRequest.get("/posts/").then((res) => {
+
+                return res.data;
+            })
+    })
     return (
         <SrceenWrapper bg="white">
             <StatusBar style="dark" />
-            <ImageBackground
-                source={require('../assets/images/backgroudWelcom.jpg')}
-                style={styles.container}
-                resizeMode="cover"
-            >
-
-                <View style={{
-                    ...StyleSheet.absoluteFillObject,
-                    backgroundColor: 'rgba(0,0,0,0.5)', // darken ảnh
-                }} />
                 <View style={styles.header}>
                     <ImageBackground
                         source={require('../assets/images/homeapp1.jpg')}
@@ -67,7 +62,7 @@ const homeapp = () => {
 
                     <View style={styles.icons}>
                         <Pressable>
-                            <Icon name="newPost" size={hp(3.5)} strokeWidth={2} color='#c4d3d9'  onPress={() => router.push('newPost')}/>
+                            <Icon name="newPost" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('newPost')} />
                         </Pressable>
                         <Pressable>
                             <Icon name="messages" size={hp(4)} strokeWidth={2} color='#c4d3d9' />
@@ -79,7 +74,7 @@ const homeapp = () => {
                 </View>
                 <View style={styles.body}>
 
-                    <Posts/> 
+                    <Posts posts={data} />
 
                 </View>
                 <View style={styles.footer}>
@@ -100,7 +95,6 @@ const homeapp = () => {
                     <Text style={{ color: "white" }}>Chào mừng đến với Home App</Text>
                     <Button title={'Logout'} loading={loading} onPress={onSubmit} />
                     </View>*/}
-            </ImageBackground>
         </SrceenWrapper>
     )
 }

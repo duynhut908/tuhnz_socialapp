@@ -1,11 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
+import Loading from './Loading'
 import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
-import Loading from './Loading'
+import Icon from '../assets/icons'
 
-const Button = ({
-    buttonStyle,
+const ButtonIcon = ({ buttonStyle,
     textStyle,
     title = '',
     onPress = () => { },
@@ -29,13 +29,14 @@ const Button = ({
         )
     }
     return (
-        <Pressable onPress={onPress} style={[styles.button, buttonStyle, hasShadow && shadowStyle]}>
+        <TouchableOpacity onPress={onPress} style={[styles.button, buttonStyle, hasShadow && shadowStyle,]}>
+            <Icon name='image' color='white' />
             <Text style={[styles.text, textStyle]}>{title}</Text>
-        </Pressable>
+        </TouchableOpacity>
     )
 }
 
-export default Button
+export default ButtonIcon
 
 const styles = StyleSheet.create({
     button: {
@@ -44,10 +45,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderCurve: 'continuous',
-        borderRadius: theme.radius.xl
+        borderRadius: theme.radius.xs,
+        flexDirection: 'row',
+        gap: 5,
     },
     text: {
-        fontSize: hp(2.5),
+        fontSize: hp(1.5),
         color: 'white',
         fontWeight: theme.fonts.bold
     }

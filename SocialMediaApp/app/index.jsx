@@ -1,17 +1,16 @@
 import { View, Text, Button } from 'react-native'
-import React from 'react'
-import { useRouter } from "expo-router";
+import React, { useContext } from 'react'
+import { Redirect, useRouter } from "expo-router";
 import SrceenWrapper from '../components/SrceenWrapper';
+import { AuthContext } from '../context/AuthContext';
 const index = () => {
-    const router = useRouter();
-    return (
-        <SrceenWrapper>
-            <View>
-                <Text>MMMM</Text>
-                <Button title="welcome" onPress={() => router.push('welcome')} />
-            </View>
-        </SrceenWrapper>
-    )
+    const { currentUser } = useContext(AuthContext);
+
+    if (!currentUser) {
+        return <Redirect href="/welcome" />;
+    } 
+
+    return <Redirect href="/homeapp" />;
 }
 
 export default index

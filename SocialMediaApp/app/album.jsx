@@ -13,27 +13,16 @@ const album = ({ }) => {
     const maxDisplay = 4; // hiển thị tối đa 4 ảnh
     const router = useRouter();
     const params = useLocalSearchParams(); // trả về object chứa tất cả params
-    const note = params.user;          // lấy giá trị note
+    const note = JSON.parse(params.user);          // lấy giá trị note
     console.log(note)
     return (
-        <SrceenWrapper>
-            <ImageBackground
-                source={require('../assets/images/backgroudWelcom.jpg')}
-                style={styles.container}
-                resizeMode="cover"
-            >
-
-                <View style={{
-                    ...StyleSheet.absoluteFillObject,
-                    backgroundColor: 'rgba(0,0,0,0.5)', // darken ảnh
-                }} />
+        <SrceenWrapper >
                 <View style={styles.header}>
                     <View>
-                        <Header title="New Post" showBackButton={true} />
+                        <Header title="My Album" showBackButton={true} />
                     </View>
                 </View >
                 <MyAlbum user={note} router={router} />
-            </ImageBackground>
         </SrceenWrapper>
     )
 }

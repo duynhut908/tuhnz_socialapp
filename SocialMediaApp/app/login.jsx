@@ -16,7 +16,7 @@ const login = () => {
     const emailRef = useRef("");
     const passwordRef = useRef("");
     const [loading, setLoading] = useState(false)
-    const { login } = useContext(AuthContext);
+    const { login, currentUser } = useContext(AuthContext);
     const onSubmit = async () => {
         if (!emailRef.current || !passwordRef.current) {
             Alert.alert('Login', "Please fill all the fields!");
@@ -28,8 +28,7 @@ const login = () => {
                 username: emailRef.current,
                 password: passwordRef.current,
             })
-            Alert.alert("Login", user.name); 
-            router.push('homeapp')
+            router.replace('homeapp')
         }
         catch (err) {
             Alert.alert("Login Failed", err?.message || "Something went wrong");
@@ -37,7 +36,7 @@ const login = () => {
             setLoading(false);
         }
     }
-
+   
     return (
         <SrceenWrapper bg="white">
             <StatusBar style='dark' />

@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import SrceenWrapper from '../components/SrceenWrapper';
 import Header from '../components/Header';
-import { hp } from '../helpers/common';
+import { hp, wp } from '../helpers/common';
 import Avatar from '../components/Avatar';
 import { theme } from '../constants/theme';
 import RichTextEditor from '../components/RichTextEditor';
@@ -137,77 +137,85 @@ const newPost = () => {
     }
     return (
         <SrceenWrapper>
-            <ImageBackground
-                source={require('../assets/images/backgroudWelcom.jpg')}
-                style={styles.container}
-                resizeMode="cover"
-            >
-
-                <View style={{
-                    ...StyleSheet.absoluteFillObject,
-                    backgroundColor: 'rgba(0,0,0,0.5)', // darken ảnh
-                }} />
-
-                <View style={styles.header}>
-                    <View>
-                        <Header title="New Post" showBackButton={true} />
-                    </View>
-                </View >
-                <ScrollView contentContainerStyle={{ gap: 20, padding: 8 }}>
-                    <View style={styles.headerNewPost}>
-                        <Avatar size={hp(8.5)} />
+            <View style={styles.header}>
+                <View>
+                    <Header title="New Post" showBackButton={true} />
+                </View>
+            </View >
+            <ScrollView contentContainerStyle={{ gap: 20, padding: 8 }}>
+                <View style={styles.headerNewPost}>
+                    <View style={styles.infoUserPost}>
+                        <Avatar size={hp(8.5)} link={currentUser?.pic_avatar} />
                         <View style={{ gap: 2 }}>
                             <View style={styles.name}>
-                                <Text style={styles.name}>An Thời Đại</Text>
+                                <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{currentUser?.name ? currentUser.name : "Không tìm thấy currentUser"}</Text>
                                 <Text style={styles.publicText}>Public</Text>
                             </View>
                         </View>
                     </View>
+                    {/* <Pressable style={styles.buttonPost}
+                            onPress={() => {
+                                console.log("Button pressed");
+                                //onSubmit();
+                            }}>
+                            <Icon name='send' size={30} color="#46c9e9" fill="blue" />
+                        </Pressable> */}
+                    <Button buttonStyle={{ height: hp(5), width: hp(15) }}
+                        title="Post"
+                        loading={loading}
+                        hasShadow={false}
+                        onPress={() => {
+                            console.log("Button pressed");
+                            onSubmit();
+                        }}
+                    //height={hp(5)}
+                    />
+                </View>
 
-                    <View style={styles.textEditor}>
-                        <RichTextEditor editorRef={editorRef} onChange={body => {
-                            bodyRef.current = body;
-                        }} />
-                    </View>
-                    {imageList.length > 0 && (
-                        imageList.map((image) =>
-                        (image.type === 'image' ? <View key={image.publicId} style={styles.file}>
-                            <Image
-                                resizeMode='cover'
-                                source={{ uri: image.url }}
+                <View style={styles.textEditor}>
+                    <RichTextEditor editorRef={editorRef} onChange={body => {
+                        bodyRef.current = body;
+                    }} />
+                </View>
+                {imageList.length > 0 && (
+                    imageList.map((image) =>
+                    (image.type === 'image' ? <View key={image.publicId} style={styles.file}>
+                        <Image
+                            resizeMode='cover'
+                            source={{ uri: image.url }}
+                            style={{ flex: 1 }}
+                        />
+                        <Pressable disabled={loading} style={styles.closeIcon} onPress={() => deleteImageLink(image.publicId, image.type)}>
+                            <Icon name='delete' size={20} color='#ccc' />
+                        </Pressable>
+                    </View> :
+                        <View key={image.publicId} style={styles.file}>
+                            <Video
                                 style={{ flex: 1 }}
+                                source={{ uri: image.url }}
+                                useNativeControls
+                                resizeMode='cover'
+                                isLooping
                             />
                             <Pressable disabled={loading} style={styles.closeIcon} onPress={() => deleteImageLink(image.publicId, image.type)}>
                                 <Icon name='delete' size={20} color='#ccc' />
                             </Pressable>
-                        </View> :
-                            <View key={image.publicId} style={styles.file}>
-                                <Video
-                                    style={{ flex: 1 }}
-                                    source={{ uri: image.url }}
-                                    useNativeControls
-                                    resizeMode='cover'
-                                    isLooping
-                                />
-                                <Pressable disabled={loading} style={styles.closeIcon} onPress={() => deleteImageLink(image.publicId, image.type)}>
-                                    <Icon name='delete' size={20} color='#ccc' />
-                                </Pressable>
-                            </View>)
-                        )
-                    )}
-                    <View style={styles.media}>
-                        <Text style={styles.addImage}>Add to your post</Text>
-                        <View style={styles.mediaIcons}>
-                            <TouchableOpacity disabled={loading} onPress={() => onPick(true)}>
-                                <Icon name="image" size={30} color="green" />
-                            </TouchableOpacity>
-                            <TouchableOpacity disabled={loading} onPress={() => onPick(false)}>
-                                <Icon name="video" size={32} color="green" />
-                            </TouchableOpacity>
-                        </View>
+                        </View>)
+                    )
+                )}
+                <View style={styles.media}>
+                    <Text style={styles.addImage}>Add to your post</Text>
+                    <View style={styles.mediaIcons}>
+                        <TouchableOpacity disabled={loading} onPress={() => onPick(true)}>
+                            <Icon name="image" size={30} color={loading ? '#5c9b88' : 'green'} />
+                        </TouchableOpacity>
+                        <TouchableOpacity disabled={loading} onPress={() => onPick(false)}>
+                            <Icon name="video" size={32} color={loading ? '#5c9b88' : 'green'} />
+                        </TouchableOpacity>
                     </View>
-                </ScrollView>
-                <Button buttonStyle={{ height: hp(6.2) }}
+                </View>
+            </ScrollView>
+            {/* <Button buttonStyle={{ height: hp(6.2) }}
                     title="Post"
                     loading={loading}
                     hasShadow={false}
@@ -215,8 +223,7 @@ const newPost = () => {
                         console.log("Button pressed");
                         onSubmit();
                     }}
-                />
-            </ImageBackground >
+                /> */}
         </SrceenWrapper >
     )
 }
@@ -240,12 +247,21 @@ const styles = StyleSheet.create({
     headerNewPost: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between', /* đẩy A sang trái, B sang phải */
+    },
+    infoUserPost: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 12,
+    },
+    buttonPost: {
+
     },
     name: {
         fontSize: hp(2.7),
         fontWeight: theme.fonts.semibold,
-        color: '#46c9e9'
+        color: '#46c9e9',
+        maxWidth: wp(40)
     },
     publicText: {
         fontSize: hp(1.9),

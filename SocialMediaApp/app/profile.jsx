@@ -11,13 +11,16 @@ import { Picker } from '@react-native-picker/picker';
 import DropDownPicker from "react-native-dropdown-picker";
 import Avatar from '../components/Avatar';
 import { useNavigation } from '@react-navigation/native';
+import format from "date-fns/format";
+import parseISO from "date-fns/parseISO";
+import PageA from './pageA';
 const profile = () => {
   const { currentUser, setCurrentUser, handleLogout } = useContext(AuthContext);
   const router = useRouter()
   const onLogout = async () => {
     try {
       await handleLogout();
-      Alert.alert("Logout", "Logout successfully");
+      router.replace('/welcome');
     } catch (err) {
       console.log(err)
     }
@@ -40,19 +43,8 @@ const profile = () => {
   }
   return (
     <SrceenWrapper>
-      <ImageBackground
-        source={require('../assets/images/backgroudWelcom.jpg')}
-        style={styles.container}
-        resizeMode="cover"
-      >
-
-        <View style={{
-          ...StyleSheet.absoluteFillObject,
-          backgroundColor: 'rgba(0,0,0,0.5)', // darken ảnh
-        }} />
-        <UserHeader user={currentUser} router={router} handleLogout={submitLogout} />
-        <UserBody user={currentUser} router={router} />
-      </ImageBackground>
+      <UserHeader user={currentUser} router={router} handleLogout={submitLogout} />
+      <UserBody user={currentUser} router={router} />
     </SrceenWrapper>
   )
 }
@@ -71,7 +63,7 @@ const UserHeader = ({ user, router, handleLogout }) => {
   )
 }
 const UserBody = ({ user, router }) => {
-  const [selectedTab, setSelectedTab] = useState("edit");
+  const [selectedTab, setSelectedTab] = useState("profile");
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([
     { label: "Profile", value: "edit", color: "#68c8e5" },
@@ -84,90 +76,107 @@ const UserBody = ({ user, router }) => {
       // đảm bảo chỉ navigate khi có dữ liệu và component mount
       router.push({
         pathname: 'album',
-        params: { user: user },
+        params: { user: JSON.stringify(user) },
       });
-      setSelectedTab("edit")
+      setSelectedTab("profile")
+    }
+    else if (selectedTab === 'story') {
+      // đảm bảo chỉ navigate khi có dữ liệu và component mount
+      router.push({
+        pathname: 'myPosts',
+        params: { user: JSON.stringify(user) },
+      });
+      setSelectedTab("profile")
+    }
+    else if (selectedTab === 'video') {
+      // đảm bảo chỉ navigate khi có dữ liệu và component mount
+      router.push({
+        pathname: 'pageA',
+      });
+      setSelectedTab("profile")
     }
   }, [selectedTab]);
 
 
-const renderContent = () => {
-  switch (selectedTab) {
-    case "edit":
-      return <MyProfile user={user} router={router} />;
-    case "story":
-      return <Text>Story</Text>;
-    case "image":
-      return null;
-    case "video":
-      return <Text>MyVideo</Text>;
-    default:
-      return <Text>MyUser</Text>;
-  }
-};
+  const renderContent = () => {
+    switch (selectedTab) {
+      case "edit":
+        return <Text>Edit Profile</Text>;
+      case "story":
+        return <Text></Text>;
+      case "image":
+        return <Text></Text>;
+      case "video":
+        return <Text></Text>
+      default:
+        return <MyProfile user={user} />;
+    }
+  };
 
-return (
-  <TouchableWithoutFeedback
-    onPress={() => {
-      if (open) setOpen(false); // nếu dropdown đang mở thì đóng
-      Keyboard.dismiss();       // ẩn bàn phím nếu đang mở
-    }}
-  >
-    <View style={styles.bodyProfile}>
-      <View style={styles.comboWrapper}>
-        <DropDownPicker
-          open={open}
-          value={selectedTab}
-          items={items}
-          setOpen={setOpen}
-          setItems={setItems}
-          setValue={callback => setSelectedTab(callback())}
-          placeholder=""
-          style={styles.comboBox}
-          dropDownContainerStyle={styles.dropdownContainer}
-          textStyle={styles.comboText}
+  return (
+    <TouchableWithoutFeedback
+      onPress={() => {
+        if (open) setOpen(false); // nếu dropdown đang mở thì đóng
+        Keyboard.dismiss();       // ẩn bàn phím nếu đang mở
+      }}
+    >
+      <View style={styles.bodyProfile}>
+        <View style={styles.comboWrapper}>
+          <DropDownPicker
+            open={open}
+            value={selectedTab}
+            items={items}
+            setOpen={setOpen}
+            setItems={setItems}
+            setValue={callback => setSelectedTab(callback())}
+            placeholder=""
+            style={styles.comboBox}
+            dropDownContainerStyle={styles.dropdownContainer}
+            textStyle={styles.comboText}
 
-          animationType="slide"
-          animationDuration={300}
-          ArrowDownIconComponent={({ style }) => (
-            <Icon name="menu" size={hp(2.5)} strokeWidth={2} color='#baffd7' />
-          )}
-          ArrowUpIconComponent={({ style }) => (
-            <Icon name="menustraight" size={hp(2.5)} strokeWidth={2} color='#baffd7' />
-          )}
+            animationType="slide"
+            animationDuration={300}
+            ArrowDownIconComponent={({ style }) => (
+              <Icon name="menu" size={hp(2.5)} strokeWidth={2} color='#baffd7' />
+            )}
+            ArrowUpIconComponent={({ style }) => (
+              <Icon name="menustraight" size={hp(2.5)} strokeWidth={2} color='#baffd7' />
+            )}
 
-          renderListItem={({ item }) => (
-            <TouchableOpacity
-              style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, padding: 6, paddingRight: 10 }}
-              onPress={() => {
-                setSelectedTab(item.value); // cập nhật state
-                setOpen(false);              // đóng dropdown
-              }}
-            >
-              <Text style={[styles.textItemCombobox,]}>{item.label}</Text>
-              <Icon name={item.value} size={hp(2.6)} strokeWidth={2} color={item.color} />
-            </TouchableOpacity>
-          )}
-        />
+            renderListItem={({ item }) => (
+              <TouchableOpacity
+                style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, padding: 6, paddingRight: 10 }}
+                onPress={() => {
+                  setSelectedTab(item.value); // cập nhật state
+                  setOpen(false);              // đóng dropdown
+                }}
+              >
+                <Text style={[styles.textItemCombobox,]}>{item.label}</Text>
+                <Icon name={item.value} size={hp(2.6)} strokeWidth={2} color={item.color} />
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+        <View style={styles.containerBody}>
+          {renderContent()}
+        </View>
       </View>
-      <View style={styles.containerBody}>
-        {renderContent()}
-      </View>
-    </View>
-  </TouchableWithoutFeedback>
-)
+    </TouchableWithoutFeedback>
+  )
 }
-const MyProfile = ({ user, router }) => {
+const MyProfile = ({ user }) => {
+  const { currentUser } = useContext(AuthContext)
+  const router = useRouter()
   return (
     <View style={styles.myProfileContainer}>
       <View style={{ gap: 15, }}>
         <View style={styles.avatarContainer} >
-          <Avatar size={hp(20)} />
-          <Pressable style={[styles.editIcon,]}>
+          <Avatar size={hp(20)} link={user?.pic_avatar} />
+          {currentUser?.username === user?.username && <Pressable style={[styles.editIcon,]} onPress={() => router.push('editAvatar')}>
             <Icon name="edit" strokeWidth={2.5} size={20} />
-          </Pressable>
-          <Text style={styles.nameProfile}>An Thời Đại</Text>
-          <Text style={styles.bioProfile}>"Tiền không mua được hạnh phúc nhưng có thể mua được rất nhiều gà rán để mấy ông bạn của tôi hạnh phúc."</Text>
+          </Pressable>}
+          <Text style={styles.nameProfile}>{user?.name}</Text>
+          <Text style={styles.bioProfile}>"{user?.desc}"</Text>
         </View>
       </View>
       <View style={styles.info}>
@@ -175,27 +184,27 @@ const MyProfile = ({ user, router }) => {
         <View style={styles.contentInfo}>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Ngày sinh: </Text>
-            <Text style={styles.detailItemInfo}>20/05/1998</Text>
+            <Text style={styles.detailItemInfo}>{user?.birthday ? format(parseISO(user?.birthday), 'dd/MM/yyyy') : "Không hiển thị"}</Text>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Giới tính: </Text>
-            <Text style={styles.detailItemInfo}>Tomboy</Text>
+            <Text style={styles.detailItemInfo}>{user?.sex ? "Nam" : "Nữ"}</Text>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Địa chỉ: </Text>
-            <Text style={styles.detailItemInfo}>Thị xã Đồng Lập, huyện An Trung, tỉnh An Đông</Text>
+            <Text style={styles.detailItemInfo}>{user?.address ? user?.address : "Không hiển thị"}</Text>
           </View>
           <View style={styles.itemInfo}>
-            <Text style={styles.titleItemInfo}>Trường học: </Text>
-            <Text style={styles.detailItemInfo}>Trường THPT Thịnh Phú Đông</Text>
+            <Text style={styles.titleItemInfo}>Làm việc: </Text>
+            <Text style={styles.detailItemInfo}>{user?.work ? user?.work : "Không hiển thị"}</Text>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>SĐT: </Text>
-            <Text style={styles.detailItemInfo}>0934 234 112</Text>
+            <Text style={styles.detailItemInfo}>{user?.sdt ? user?.sdt : "Không hiển thị"}</Text>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Email: </Text>
-            <Text style={styles.detailItemInfo}>an_thoidai_111@gmail.com</Text>
+            <Text style={styles.detailItemInfo}>{user?.email ? user?.email : "Không hiển thị"}</Text>
           </View>
         </View>
       </View>

@@ -1,13 +1,14 @@
 import { StyleSheet, View, Text, Image, Pressable, ImageBackground } from 'react-native'
-import React from 'react'
+import React, { useContext } from 'react'
 import SrceenWrapper from '../components/SrceenWrapper'
 import { StatusBar } from 'expo-status-bar'
 import { wp, hp } from '../helpers/common'
 import { theme } from '../constants/theme'
 import Button from '../components/Button'
-import { useRouter } from 'expo-router'
+import { Redirect, useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query';
 import { makeRequest } from '../api/axios'
+import { AuthContext } from '../context/AuthContext'
 
 const wellcome = () => {
     const router = useRouter();
@@ -15,6 +16,11 @@ const wellcome = () => {
         queryKey: ["users"],
         queryFn: () => makeRequest.get("/users/dnhut").then(res => res.data),
     });
+    const { currentUser } = useContext(AuthContext);
+
+    if (currentUser) {
+      return <Redirect href="/homeapp" />; // ✅ Không bao giờ quay về welcome nữa
+    }
     return (
         <SrceenWrapper bg="white">
             <StatusBar style="dark" />

@@ -12,16 +12,18 @@ const _layout = () => {
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
                 <Stack
-                    initialRouteName="homeapp"
+                initialRouteName="homeapp"
                     screenOptions={{
+
                         headerShown: false,
-                       // presentation: "containedTransparentModal",
-                        animation: "slide_from_right",
-                    }} 
-                    
+                        gestureEnabled: true,
+                        animation: 'slide_from_right', // push/replace: phải sang trái
+                        gestureDirection: 'horizontal', // back swipe: trái sang phải
+                        detachPreviousScreen: false,        // native-stack option
+                        detachInactiveScreens: false,       // react-navigation option
+                    }}
                 >
-                    
-                      <Slot />
+                    <Slot />
                 </Stack>
             </QueryClientProvider>
         </AuthProvider>
