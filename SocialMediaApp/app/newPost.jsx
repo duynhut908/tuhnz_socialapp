@@ -20,7 +20,6 @@ const newPost = () => {
     const { currentUser } = useContext(AuthContext);
     const bodyRef = useRef("")
     const editorRef = useRef(null)
-
     const [loading, setLoading] = useState(false);
     const [imageList, setImageList] = useState([]);
     const uploadPicture = async (formData) => {
@@ -43,8 +42,7 @@ const newPost = () => {
     const onPick = async (isImage) => {
         let mediaConfig = {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
+            allowsEditing: true,// false và xóa aspect là không crop ảnh //aspect: [2, 3], 
             quality: 0.7
         }
         if (!isImage) {
