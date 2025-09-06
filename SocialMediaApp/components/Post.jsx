@@ -233,6 +233,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "#eee",
+    height: hp(5)
   },
   iconInPost: {
     flex: 1,

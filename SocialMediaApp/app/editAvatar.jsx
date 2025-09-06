@@ -22,19 +22,22 @@ const editAvatar = () => {
   const [delImg, setDelImg] = useState(null)
   const router = useRouter();
   const deleteImageLink = async (publicId) => {
-
     try {
       const resourceType = 'image'
       const response = await cloudinaryDeleteImage(publicId, resourceType);
       if (response) console.log(response)
-      router.back()
+
     } catch (error) {
       console.error('Error delete image in fontend:', error);
+    } finally {
+      router.back()
     }
   }
   const backSetAvatar = () => {
-    if (!delImg) return;
-    else deleteImageLink(delImg)
+    if (!delImg) {
+      router.back()
+    }
+    else { deleteImageLink(delImg) }
   }
   return (
     <SrceenWrapper>
@@ -120,7 +123,6 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
       uploadPicture(formData); // gửi FormData
     } else {
       setIsNew(false)
-
     }
 
   }
@@ -348,43 +350,43 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
 
         <Avatar size={hp(20)} link={avatarUp ? avatarUp?.url : select ? getAvatarById(select)?.link : currentUser?.pic_avatar} />
         {!loading ? <View style={styles.listInteractButton}>
-          <TouchableOpacity disable={isSet} style={{ height: hp(6), width: hp(11.5), opacity: isSet ? 0.5 : 1 }}>
+          <View style={{ height: hp(6), width: hp(11.5), opacity: isSet ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
               title="Set ảnh" name='setImg' color='#00ff4f'
-
+              disablePress={isSet}
               hasShadow={false}
               onPress={() => {
                 onSubmitSetAvatar();
               }}
             />
-          </TouchableOpacity>
-          <TouchableOpacity disabled={isNew} style={{ height: hp(6), width: hp(11.5), opacity: isNew ? 0.5 : 1 }}>
+          </View>
+          <View style={{ height: hp(6), width: hp(11.5), opacity: isNew ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
               title="Ảnh mới" name='newImg' color='#b7e2ed'
-
+              disablePress={isNew}
               hasShadow={false}
               onPress={() => {
                 onPick();
               }}
-            /></TouchableOpacity>
-          <TouchableOpacity disabled={isSave} style={{ height: hp(6), width: hp(11.5), opacity: isSave ? 0.5 : 1 }}>
+            /></View>
+          <View style={{ height: hp(6), width: hp(11.5), opacity: isSave ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
               title="Lưu ảnh" name='saveImg' color='#e7b861'
-
+              disablePress={isSave}
               hasShadow={false}
               onPress={() => {
                 onSubmitSaveAvatar();
               }}
-            /></TouchableOpacity>
-          <TouchableOpacity disabled={isDel} style={{ height: hp(6), width: hp(11.5), opacity: isDel ? 0.5 : 1 }}>
+            /></View>
+          <View style={{ height: hp(6), width: hp(11.5), opacity: isDel ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
               title="Xóa ảnh" name='delImg' color='#fc4f4a'
-
+              disablePress={isDel}
               hasShadow={false}
               onPress={() => {
                 onSubmitDeleteAvatar();
               }}
-            /></TouchableOpacity>
+            /></View>
         </View> : <View style={styles.loading}>
           <ActivityIndicator size='large' color='#00ff4f' />
         </View>}

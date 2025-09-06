@@ -8,6 +8,7 @@ import Icon from '../assets/icons'
 const ButtonIcon = ({ buttonStyle,
     textStyle,
     name,
+    disablePress,
     color,
     title = '',
     onPress = () => { },
@@ -31,7 +32,7 @@ const ButtonIcon = ({ buttonStyle,
         )
     }
     return (
-        <TouchableOpacity onPress={onPress} style={[styles.button, buttonStyle, hasShadow && shadowStyle,]}>
+        <TouchableOpacity disabled={disablePress} onPress={onPress} style={[styles.button, buttonStyle, hasShadow && shadowStyle,]}>
             <Icon name={name} color={color} />
             <Text style={[styles.text, textStyle, { color: color }]}>{title}</Text>
         </TouchableOpacity>
