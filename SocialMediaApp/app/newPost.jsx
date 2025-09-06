@@ -118,9 +118,32 @@ const newPost = () => {
         router.back()
     };
 
+
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: (post) => makeRequest.post(`/posts`, post),
+        onSuccess: () => {
+            // Làm mới dữ liệu sau khi mutation thành công
+            queryClient.invalidateQueries({ queryKey: ['posts', currentUser] });
+        },
+        onError: (error) => {
+            console.error("Mutation failed:", error);
+        },
+    })
+    const onSubmit = async () => {
+        try {
+            mutation.mutate({ desc: bodyRef.current, listImages: imageList });
+        } catch (error) {
+            Alert.alert("Errol", error);
+        } finally {
+            router.back()
+        }
+
+    }
+
     return (
         <SrceenWrapper>
-            <UserHeader desc={bodyRef.current} listImages={imageList} loading={loading} onBackPress={deleteListUped}/>
+            <UserHeader loading={loading} onBackPress={deleteListUped} onSubmit={onSubmit}/>
             <ScrollView contentContainerStyle={{ gap: 20, padding: 8 }}>
                 <View style={styles.headerNewPost}>
                     <View style={styles.infoUserPost}>
@@ -190,36 +213,12 @@ const newPost = () => {
     )
 }
 
-const UserHeader = ({ desc, listImages, loading, onBackPress }) => {
-    const { currentUser } = useContext(AuthContext);
-    const router = useRouter();
-    const queryClient = useQueryClient()
-
-    const mutation = useMutation({
-        mutationFn: (post) => makeRequest.post(`/posts`, post),
-        onSuccess: () => {
-            // Làm mới dữ liệu sau khi mutation thành công
-            queryClient.invalidateQueries({ queryKey: ['posts', currentUser] });
-        },
-        onError: (error) => {
-            console.error("Mutation failed:", error);
-        },
-    })
-    const onSubmit = async () => {
-        try {
-            mutation.mutate({ desc: desc, listImages: listImages });
-        } catch (error) {
-            Alert.alert("Errol", error);
-        } finally {
-            router.back()
-        }
-
-    }
-
+const UserHeader = ({ loading, onBackPress, onSubmit }) => {
+   
     return (
         <View style={styles.header}>
             <View>
-                <Header title="Edit Profile" showBackButton={true} onBackPress={onBackPress}/>
+                <Header title="Edit Profile" showBackButton={true} onBackPress={onBackPress} />
                 {loading ? <View style={[styles.postButton]}>
                     <ActivityIndicator size='small' color={theme.colors.check} />
                 </View> : <TouchableOpacity style={styles.postButton} onPress={onSubmit}>
@@ -289,7 +288,7 @@ const styles = StyleSheet.create({
         borderCurve: 'continuous',
         borderColor: '#ccc'
     },
-    addImage:{
+    addImage: {
         fontSize: hp(1.9),
         fontWeight: theme.fonts.medium,
         color: '#ccc'
