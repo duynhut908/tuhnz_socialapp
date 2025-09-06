@@ -3,9 +3,9 @@ import React from 'react'
 import Icon from '../assets/icons'
 import { theme } from '../constants/theme'
 
-const BackButton = ({ size = 35, router }) => {
+const BackButton = ({ size = 35, router, onPress }) => {
   return (
-    <Pressable onPress={() => router.back()} style={styles.button}>
+    <Pressable onPress={onPress ? onPress : () => router.back()} style={styles.button}>
       <Icon name='arrowleft' strokeWidth={3} size={size} color="white" />
     </Pressable>
   )

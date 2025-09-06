@@ -1,5 +1,5 @@
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useState } from 'react'
+import { ActivityIndicator, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useContext, useEffect, useState } from 'react'
 import Header from '../components/Header'
 import SrceenWrapper from '../components/SrceenWrapper'
 import { hp, wp } from '../helpers/common'
@@ -19,22 +19,38 @@ import * as ImagePicker from 'expo-image-picker'
 import { cloudinaryDeleteImage, cloudinaryUpload } from '../api/axiosUpload'
 const editAvatar = () => {
   const { currentUser, setCurrentUser } = useContext(AuthContext)
-  const [selected, setSelected] = useState(null);
+  const [delImg, setDelImg] = useState(null)
+  const router = useRouter();
+  const deleteImageLink = async (publicId) => {
+
+    try {
+      const resourceType = 'image'
+      const response = await cloudinaryDeleteImage(publicId, resourceType);
+      if (response) console.log(response)
+      router.back()
+    } catch (error) {
+      console.error('Error delete image in fontend:', error);
+    }
+  }
+  const backSetAvatar = () => {
+    if (!delImg) return;
+    else deleteImageLink(delImg)
+  }
   return (
     <SrceenWrapper>
       <View style={styles.header}>
         <View>
-          <Header title="Edit Avatar" showBackButton={true} />
+          <Header title="Edit Avatar" showBackButton={true} onBackPress={backSetAvatar} />
         </View>
       </View >
-      <ManagerMyAvatar currentUser={currentUser} setCurrentUser={setCurrentUser} />
+      <ManagerMyAvatar currentUser={currentUser} setCurrentUser={setCurrentUser} setDelImg={setDelImg} />
     </SrceenWrapper>
   )
 }
 const sizeOfItemAvatar = hp(9.5)
 const sizeOfSelectedItemAvatar = hp(1.2)
 
-const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
+const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
   const router = useRouter()
   const [loading, setLoading] = useState()
 
@@ -57,8 +73,9 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
   const [isSave, setIsSave] = useState(true)
   const [isDel, setIsDel] = useState(true)
 
-
-
+  useEffect(() => {
+    setDelImg(avatarUp?.publicId)
+  }, [avatarUp])
 
   const uploadPicture = async (formData) => {
     if (loading) return;
@@ -76,9 +93,7 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
   }
   const onPick = async () => {
     setIsNew(true)
-    setIsSet(false)
-    setIsDel(false)
-    setIsSave(false)
+
     let mediaConfig = {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -89,6 +104,9 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
 
     if (!result.canceled) {
 
+      setIsSet(false)
+      setIsDel(false)
+      setIsSave(false)
       const pickedFile = result.assets[0];
 
       // Tạo FormData
@@ -102,7 +120,6 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
       uploadPicture(formData); // gửi FormData
     } else {
       setIsNew(false)
-      setIsSet(true)
 
     }
 
@@ -330,11 +347,11 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
       <View style={styles.avatarEdit}>
 
         <Avatar size={hp(20)} link={avatarUp ? avatarUp?.url : select ? getAvatarById(select)?.link : currentUser?.pic_avatar} />
-        <View style={styles.listInteractButton}>
+        {!loading ? <View style={styles.listInteractButton}>
           <TouchableOpacity disable={isSet} style={{ height: hp(6), width: hp(11.5), opacity: isSet ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-              title="Set ảnh"
-              loading={loading}
+              title="Set ảnh" name='setImg' color='#00ff4f'
+
               hasShadow={false}
               onPress={() => {
                 onSubmitSetAvatar();
@@ -343,8 +360,8 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
           </TouchableOpacity>
           <TouchableOpacity disabled={isNew} style={{ height: hp(6), width: hp(11.5), opacity: isNew ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-              title="Ảnh mới"
-              loading={loading}
+              title="Ảnh mới" name='newImg' color='#b7e2ed'
+
               hasShadow={false}
               onPress={() => {
                 onPick();
@@ -352,8 +369,8 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
             /></TouchableOpacity>
           <TouchableOpacity disabled={isSave} style={{ height: hp(6), width: hp(11.5), opacity: isSave ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-              title="Lưu ảnh"
-              loading={loading}
+              title="Lưu ảnh" name='saveImg' color='#e7b861'
+
               hasShadow={false}
               onPress={() => {
                 onSubmitSaveAvatar();
@@ -361,14 +378,16 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser }) => {
             /></TouchableOpacity>
           <TouchableOpacity disabled={isDel} style={{ height: hp(6), width: hp(11.5), opacity: isDel ? 0.5 : 1 }}>
             <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-              title="Xóa ảnh"
-              loading={loading}
+              title="Xóa ảnh" name='delImg' color='#fc4f4a'
+
               hasShadow={false}
               onPress={() => {
                 onSubmitDeleteAvatar();
               }}
             /></TouchableOpacity>
-        </View>
+        </View> : <View style={styles.loading}>
+          <ActivityIndicator size='large' color='#00ff4f' />
+        </View>}
       </View>
       {listAvatars?.length > 0 && <View style={{ paddingVertical: 10 }}
       >
@@ -445,6 +464,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',        // cho phép xuống hàng
     justifyContent: 'space-between', // dàn đều 2 cột
     gap: 7,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   titleSelectOldAvatar: {
     fontSize: hp(2.4),

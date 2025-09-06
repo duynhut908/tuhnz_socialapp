@@ -7,6 +7,8 @@ import Icon from '../assets/icons'
 
 const ButtonIcon = ({ buttonStyle,
     textStyle,
+    name,
+    color,
     title = '',
     onPress = () => { },
     loading = false,
@@ -30,8 +32,8 @@ const ButtonIcon = ({ buttonStyle,
     }
     return (
         <TouchableOpacity onPress={onPress} style={[styles.button, buttonStyle, hasShadow && shadowStyle,]}>
-            <Icon name='image' color='white' />
-            <Text style={[styles.text, textStyle]}>{title}</Text>
+            <Icon name={name} color={color} />
+            <Text style={[styles.text, textStyle, { color: color }]}>{title}</Text>
         </TouchableOpacity>
     )
 }
@@ -51,7 +53,9 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: hp(1.5),
-        color: 'white',
-        fontWeight: theme.fonts.bold
+        fontWeight: theme.fonts.bold,
+        textShadowColor: 'rgba(256,256,256,0.2)', // màu bóng
+        textShadowOffset: { width: 1, height: 1 }, // lệch theo x, y
+        textShadowRadius: 2, // độ mờ bóng
     }
 })

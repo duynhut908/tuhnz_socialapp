@@ -16,14 +16,14 @@ const homeapp = () => {
     const router = useRouter();
     //Mở lại nếu xong
     const { currentUser, handleLogout } = useContext(AuthContext)
-    // useEffect(() => {
-    //     if (!currentUser && router) {
-    //         // đảm bảo router đã sẵn sàng
-    //         setTimeout(() => {
-    //             router.replace("welcome");
-    //         }, 0);
-    //     }
-    // }, [currentUser]);
+    useEffect(() => {
+        if (!currentUser && router) {
+            // đảm bảo router đã sẵn sàng
+            setTimeout(() => {
+                router.replace("welcome");
+            }, 0);
+        }
+    }, [currentUser]);
     // console.log(currentUser)
     const [loading, setLoading] = useState(false)
 

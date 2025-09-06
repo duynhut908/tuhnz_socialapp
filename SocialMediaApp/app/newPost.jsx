@@ -1,4 +1,4 @@
-import { Alert, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import SrceenWrapper from '../components/SrceenWrapper';
@@ -15,16 +15,12 @@ import { cloudinaryUpload, cloudinaryDeleteImage } from '../api/axiosUpload';
 import { Video } from 'expo-av';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { makeRequest } from '../api/axios';
+import Loading from '../components/Loading';
 const newPost = () => {
-    // const router = useRouter();
-    // const params = useLocalSearchParams(); // trả về object chứa tất cả params
-    // const note = params.user;          // lấy giá trị note
-
-
     const { currentUser } = useContext(AuthContext);
     const bodyRef = useRef("")
     const editorRef = useRef(null)
-    const router = useRouter();
+
     const [loading, setLoading] = useState(false);
     const [imageList, setImageList] = useState([]);
     const uploadPicture = async (formData) => {
@@ -107,41 +103,24 @@ const newPost = () => {
             setLoading(false);
         }
     }
-
-    const queryClient = useQueryClient()
-
-    const mutation = useMutation({
-        mutationFn: (post) => makeRequest.post(`/posts`, post),
-        onSuccess: () => {
-            // Làm mới dữ liệu sau khi mutation thành công
-            queryClient.invalidateQueries({ queryKey: ['posts', currentUser] });
-        },
-        onError: (error) => {
-            console.error("Mutation failed:", error);
-        },
-    })
-
-    const onSubmit = async () => {
-        try {
-
-            mutation.mutate({ desc: bodyRef.current, listImages: imageList });
-        } catch (error) {
-            Alert.alert("Errol", error);
-        } finally {
-
-            bodyRef.current = "";
-
-            router.back()
+    const router = useRouter()
+    const deleteListUped = async () => {
+        setLoading(true);
+        for (const item of imageList || []) {
+            try {
+                const response = await cloudinaryDeleteImage(item.publicId, item.type);
+                if (response) console.log(response);
+            } catch (error) {
+                console.error('Error delete image in frontend:', error);
+            }
         }
+        setLoading(false);
+        router.back()
+    };
 
-    }
     return (
         <SrceenWrapper>
-            <View style={styles.header}>
-                <View>
-                    <Header title="New Post" showBackButton={true} />
-                </View>
-            </View >
+            <UserHeader desc={bodyRef.current} listImages={imageList} loading={loading} onBackPress={deleteListUped}/>
             <ScrollView contentContainerStyle={{ gap: 20, padding: 8 }}>
                 <View style={styles.headerNewPost}>
                     <View style={styles.infoUserPost}>
@@ -153,23 +132,6 @@ const newPost = () => {
                             </View>
                         </View>
                     </View>
-                    {/* <Pressable style={styles.buttonPost}
-                            onPress={() => {
-                                console.log("Button pressed");
-                                //onSubmit();
-                            }}>
-                            <Icon name='send' size={30} color="#46c9e9" fill="blue" />
-                        </Pressable> */}
-                    <Button buttonStyle={{ height: hp(5), width: hp(15) }}
-                        title="Post"
-                        loading={loading}
-                        hasShadow={false}
-                        onPress={() => {
-                            console.log("Button pressed");
-                            onSubmit();
-                        }}
-                    //height={hp(5)}
-                    />
                 </View>
 
                 <View style={styles.textEditor}>
@@ -228,6 +190,45 @@ const newPost = () => {
     )
 }
 
+const UserHeader = ({ desc, listImages, loading, onBackPress }) => {
+    const { currentUser } = useContext(AuthContext);
+    const router = useRouter();
+    const queryClient = useQueryClient()
+
+    const mutation = useMutation({
+        mutationFn: (post) => makeRequest.post(`/posts`, post),
+        onSuccess: () => {
+            // Làm mới dữ liệu sau khi mutation thành công
+            queryClient.invalidateQueries({ queryKey: ['posts', currentUser] });
+        },
+        onError: (error) => {
+            console.error("Mutation failed:", error);
+        },
+    })
+    const onSubmit = async () => {
+        try {
+            mutation.mutate({ desc: desc, listImages: listImages });
+        } catch (error) {
+            Alert.alert("Errol", error);
+        } finally {
+            router.back()
+        }
+
+    }
+
+    return (
+        <View style={styles.header}>
+            <View>
+                <Header title="Edit Profile" showBackButton={true} onBackPress={onBackPress}/>
+                {loading ? <View style={[styles.postButton]}>
+                    <ActivityIndicator size='small' color={theme.colors.check} />
+                </View> : <TouchableOpacity style={styles.postButton} onPress={onSubmit}>
+                    <Icon name="check" color={theme.colors.check} strokeWidth={0.5} />
+                </TouchableOpacity>}
+            </View>
+        </View >
+    )
+}
 export default newPost
 
 const styles = StyleSheet.create({
@@ -243,6 +244,15 @@ const styles = StyleSheet.create({
         borderBottomWidth: 0.5,
         borderColor: '#c4d3d9',      // màu viền
         justifyContent: 'center'
+    },
+    postButton: {
+        position: 'absolute',
+        right: 5,
+        top: "50%",                   // đẩy nút xuống giữa
+        transform: [{ translateY: -17 }],
+        padding: 5,
+        borderRadius: theme.radius.sm,
+        backgroundColor: 'rgba(0,0,0,0.5)'
     },
     headerNewPost: {
         flexDirection: 'row',
@@ -278,6 +288,11 @@ const styles = StyleSheet.create({
         borderRadius: theme.radius.xl,
         borderCurve: 'continuous',
         borderColor: '#ccc'
+    },
+    addImage:{
+        fontSize: hp(1.9),
+        fontWeight: theme.fonts.medium,
+        color: '#ccc'
     },
     mediaIcons: {
         flexDirection: 'row',

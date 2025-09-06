@@ -28,6 +28,11 @@ import Menu from './Menu';
 import MenuStraight from './MenuStraight';
 import Messages from './Messages';
 import NewPost from './NewPost';
+import Check from './Check';
+import SetImage from './SetImage';
+import SaveImage from './SaveImage';
+import DeleteImage from './DeleteImage';
+import NewImage from './NewImage';
 const icons = {
     home: Home,
     arrowleft: ArrowLeft,
@@ -56,6 +61,11 @@ const icons = {
     menustraight: MenuStraight,
     messages: Messages,
     newPost: NewPost,
+    check: Check,
+    setImg: SetImage,
+    saveImg: SaveImage,
+    delImg: DeleteImage,
+    newImg: NewImage
 }
 
 const Icon = ({ name, ...props }) => {

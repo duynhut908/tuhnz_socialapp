@@ -1,4 +1,4 @@
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useState } from 'react'
 import Header from '../components/Header'
 import SrceenWrapper from '../components/SrceenWrapper'
@@ -13,180 +13,183 @@ import { theme } from '../constants/theme'
 import Button from '../components/Button'
 import ButtonIcon from '../components/ButtonIcon'
 import { Check } from "lucide-react-native";
+import Input_ver2 from '../components/Input_ver2'
+import GenderRadio from '../components/GenderRadio'
+import DayForm from '../components/DayForm'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { makeRequest } from '../api/axios'
 const editProfile = () => {
-  const currentUser =
-  {
-    address: "An Đông", birthday: "2001-12-30T17:00:00.000Z", desc: "Mặt đất màu gì, tôi chẳng biết, cho đến khi cúi đầu xin vợ tha thứ.", email: "racingboy@gmail.com",
-    emailToken: "d3a57275870dbc55f90b64609aa52faa00fc704063a86de9ef7011f2bb0763e8270044a1fe7c6ad0238194e339fa6142e4c8cd0b098c4091fa863e5fd51ae220", id: 14, name: "Lữ Tra Nam", password: "$2a$10$eAaW7oWSUEmXTLfYSyemMuA12gNTY5BybqPyB5IHrPqMKWDoPmyYW",
-    pic_avatar: "https://i.pinimg.com/736x/ca/4a/e9/ca4ae9bad6e76f0b2275bc6e570ea71b.jpg", sdt: "0449 339 210",
-    sex: 1, username: "trnam", verify: null, work: "Trường đua và Trường đời"
-  }
+  const { currentUser, setCurrentUser } = useContext(AuthContext)
+  const [profile, setProfile] = useState(currentUser);
   return (
     <SrceenWrapper>
-        <View style={styles.header}>
-          <View>
-            <Header title="Edit Profile" showBackButton={true} />
-          </View>
-        </View >
-        <MyProfile user={currentUser} />
+      <UserHeader profile={profile} currentUser={currentUser} setCurrentUser={setCurrentUser} />
+      <MyProfile profile={profile} setProfile={setProfile} />
     </SrceenWrapper>
   )
 }
-const sizeItemOldAvatar = hp(9.5)
-const MyProfile = ({ user }) => {
+
+
+const UserHeader = ({ profile, currentUser, setCurrentUser }) => {
   const router = useRouter()
-  const [loading, setLoading] = useState()
+  const queryClient = useQueryClient()
+  const mutationUpdate = useMutation({
+    mutationFn: (profile) => {
+      return makeRequest.put("/users/update-profile", profile);
+    },
+    onSuccess: () => {
+      // Làm mới dữ liệu sau khi mutation thành công
+      queryClient.invalidateQueries({ queryKey: ["user", currentUser?.username] });
+      setCurrentUser(prev => ({
+        ...prev,        // giữ lại tất cả các thuộc tính cũ
+        ...profile,     // ghi đè 5 thuộc tính có trong profile
+      }));
+    },
+    onError: (error) => {
+      console.error("Mutation failed:", error);
+    },
+  })
+  const updateProfile = () => {
 
-  const [selected, setSelected] = useState(null);
-
-  const listAvatars = [
-    "https://i.pinimg.com/736x/ca/4a/e9/ca4ae9bad6e76f0b2275bc6e570ea71b.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-    "https://i.pinimg.com/736x/a1/01/03/a1010343b58861a5f7ab62c89a1465b7.jpg",
-
-  ];
-
+    console.log(profile)
+    if (!profile) return;
+    try {
+      mutationUpdate.mutate(profile);
+    } catch (error) {
+      Alert.alert("Errol", error);
+    } finally {
+      router.back()
+    }
+  }
+  return (
+    <View style={styles.header}>
+      <View>
+        <Header title="Edit Profile" showBackButton={true} />
+        <TouchableOpacity style={styles.updateProfileButton} onPress={updateProfile}>
+          <Icon name="check" color={theme.colors.check} strokeWidth={0.5} />
+        </TouchableOpacity>
+      </View>
+    </View >
+  )
+}
+const sizeItemOldAvatar = hp(9.5)
+const MyProfile = ({ profile, setProfile }) => {
+  const handleChange = (key, value) => {
+    setProfile((prev) => ({
+      ...prev, [key]: value,
+    }))
+  }
+  console.log(profile?.birthday)
   return (
     <View style={styles.myProfileContainer}>
-      <View style={styles.avatarEdit}>
-
-        <Avatar size={hp(20)} link={user?.pic_avatar} />
-        <View style={styles.listInteractButton}>
-          <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-            title="Set ảnh"
-            loading={loading}
-            hasShadow={false}
-            onPress={() => {
-              console.log("Button set avatar pressed");
-              onSubmit();
-            }}
-          />
-          <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-            title="Ảnh mới"
-            loading={loading}
-            hasShadow={false}
-            onPress={() => {
-              console.log("Button new avatar pressed");
-              onSubmit();
-            }}
-          />
-          <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-            title="Lưu ảnh"
-            loading={loading}
-            hasShadow={false}
-            onPress={() => {
-              console.log("Button save avatar pressed");
-              onSubmit();
-            }}
-          />
-          <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
-            title="Xóa ảnh"
-            loading={loading}
-            hasShadow={false}
-            onPress={() => {
-              console.log("Button delete avatar pressed");
-              onSubmit();
-            }}
-          />
-        </View>
-      </View>
-      <View //style={{ flex: 1 }}
-      >
-        <Text style={styles.titleSelectOldAvatar}>Saved Avatar</Text>
-        <ScrollView
-          style={styles.listOldAvatar}
-          contentContainerStyle={styles.listOldAvatarContent}
-          showsVerticalScrollIndicator={true}
-        >
-          {listAvatars.map((link, index) => {
-            const isSelected = selected === index;
-            const isSet = user?.pic_avatar === index; // giả sử bạn có state lưu avatar đang dùng
-
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.item,
-                  isSelected && styles.selectedItem, // bo viền trắng khi chọn
-                ]}
-                onPress={() => setSelected(index)}
-              >
-                {/* Avatar */}
-                <View style={styles.avatarWrapper}>
-                  <View
-                    style={[
-                      styles.avatar,
-                      { backgroundColor: "#ddd" }, // nền nếu chưa load ảnh
-                    ]}
-                  >
-                    <View
-                      style={{
-                        width: sizeItemOldAvatar,
-                        height: sizeItemOldAvatar,
-                        borderRadius: sizeItemOldAvatar / 2,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <Avatar size={sizeItemOldAvatar} link={link} />
-                    </View>
-                  </View>
-
-                  {/* dấu check xanh lá cho ảnh đang được set */}
-                  {isSet && (
-                    <View style={styles.checkMark}>
-                      <Check size={hp(2.5)} color="green" />
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-      {/* <View style={{ gap: 15, }}>
+      <View style={{ gap: 15, flexDirection: 'row', alignItems: 'center', height: hp(15) }}>
         <View style={styles.avatarContainer} >
-
-          {<Pressable style={[styles.editIcon,]}>
-            <Icon name="edit" strokeWidth={2.5} size={20} />
-          </Pressable>}
-          <Text style={styles.nameProfile}>{user?.name}</Text>
-          <Text style={styles.bioProfile}>"{user?.desc}"</Text>
+          <Avatar size={hp(15)} link={profile?.pic_avatar} />
         </View>
-      </View> */}
-      {/* <View style={styles.info}>
+        <View style={styles.nameAndBirth}>
+          <Input_ver2
+            name='name'
+            placeholder='Fill name'
+            color="#d1f0f7"
+            size={hp(2.2)}
+            value={profile?.name}
+            onChangeText={handleChange}
+          />
+          <DayForm profile={profile} handleChange={handleChange} />
+          {/* <Text style={styles.birth}>{format(parseISO(user?.birthday), 'dd/MM/yyyy')}</Text> */}
+        </View>
+      </View>
+      <View style={styles.bioContainer}>
+        <Text style={styles.titleInfo}>BIO</Text>
+        <TextInput
+          style={[
+            {
+              flex: 1,
+              textAlignVertical: 'top', // để text bắt đầu từ trên cùng
+              color: '#d1f0f7',         // màu chữ
+              height: hp(15),           // chiều cao
+              width: '100%',            // full width theo cha
+              borderWidth: 0.4,
+              borderColor: '#d1f0f7',
+              borderRadius: theme.radius.md,
+              borderCurve: 'continuous',
+              paddingHorizontal: 15
+            },
+          ]}
+          multiline={true}
+          blurOnSubmit={false}     // ✅ không ẩn bàn phím khi nhấn Enter
+          returnKeyType="default"  // ✅ (optional) chỉnh nút Enter thành xuống dòng
+          numberOfLines={4}
+          value={profile?.desc}
+          onChangeText={(text) => handleChange('desc', text)}
+        />
+      </View>
+      <View style={styles.info}>
         <Text style={styles.titleInfo}>INFO ACCOUNT</Text>
         <View style={styles.contentInfo}>
           <View style={styles.itemInfo}>
-            <Text style={styles.titleItemInfo}>Ngày sinh: </Text>
-            <Text style={styles.detailItemInfo}>{user?.birthday ? format(parseISO(user?.birthday), 'dd/MM/yyyy') : "Không hiển thị"}</Text>
-          </View>
-          <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Giới tính: </Text>
-            <Text style={styles.detailItemInfo}>{user?.sex ? "Nam" : "Nữ"}</Text>
+            <View style={styles.detailItemInfo}>
+              <GenderRadio
+                value={profile?.sex}
+                onChange={(val) => handleChange('sex', val)}
+              />
+            </View>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Địa chỉ: </Text>
-            <Text style={styles.detailItemInfo}>{user?.address ? user?.address : "Không hiển thị"}</Text>
+            <View style={styles.detailItemInfo}>
+              <Input_ver2
+                name='address'
+                placeholder='Fill address'
+                color="#d1f0f7"
+                size={hp(1.8)}
+                value={profile?.address}
+                onChangeText={handleChange}
+              />
+            </View>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Làm việc: </Text>
-            <Text style={styles.detailItemInfo}>{user?.work ? user?.work : "Không hiển thị"}</Text>
+            <View style={styles.detailItemInfo}>
+              <Input_ver2
+                name='work'
+                placeholder='Fill work'
+                color="#d1f0f7"
+                size={hp(1.8)}
+                value={profile?.work}
+                onChangeText={handleChange}
+              />
+            </View>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>SĐT: </Text>
-            <Text style={styles.detailItemInfo}>{user?.sdt ? user?.sdt : "Không hiển thị"}</Text>
+            <View style={styles.detailItemInfo}>
+              <Input_ver2
+                name='sdt'
+                placeholder='Fill number'
+                color="#d1f0f7"
+                size={hp(1.8)}
+                value={profile?.sdt}
+                onChangeText={handleChange}
+              />
+            </View>
           </View>
           <View style={styles.itemInfo}>
             <Text style={styles.titleItemInfo}>Email: </Text>
-            <Text style={styles.detailItemInfo}>{user?.email ? user?.email : "Không hiển thị"}</Text>
+            <View style={styles.detailItemInfo}>
+              <Input_ver2
+                name='email'
+                placeholder='Fill email'
+                color="#d1f0f7"
+                size={hp(1.8)}
+                value={profile?.email}
+                onChangeText={handleChange}
+              />
+            </View>
           </View>
         </View>
-      </View> */}
+      </View>
     </View>
   )
 }
@@ -206,82 +209,40 @@ const styles = StyleSheet.create({
     borderColor: '#c4d3d9',      // màu viền
     justifyContent: 'center'
   },
+  updateProfileButton: {
+    position: 'absolute',
+    right: 5,
+    top: "50%",                   // đẩy nút xuống giữa
+    transform: [{ translateY: -17 }],
+    padding: 5,
+    borderRadius: theme.radius.sm,
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
   myProfileContainer: {
     flex: 1,
     padding: 15,
-  },
-  avatarEdit: {
-    flexDirection: 'row',
-    alignItems: 'center',   // các con sẽ canh theo đáy phần tử cao nhất (avatar)
-    justifyContent: 'center',// đưa cả nhóm ra giữa
-    gap: 15,
-    //flex: 1
+    gap: 10
   },
   avatarContainer: {
-    alignSelf: 'left',
+    height: hp(15)
   },
-  listInteractButton: {
+  nameAndBirth: {
     flex: 1,
-    flexDirection: 'row',    // xếp theo hàng ngang
-    flexWrap: 'wrap',        // cho phép xuống hàng
-    justifyContent: 'space-between', // dàn đều 2 cột
-    gap: 7,
-  },
-  titleSelectOldAvatar: {
-    fontSize: hp(2.4),
-    fontWeight: theme.fonts.bold,
-    color: '#d1f0f7',
-    textShadowColor: 'rgba(0,0,0,0.6)', // màu bóng
-    textShadowOffset: { width: 1, height: 1 }, // lệch theo x, y
-    textShadowRadius: 2, // độ mờ bóng   
-    marginVertical: 10
-  },
-  listOldAvatar: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    padding: 8,
-    maxHeight: hp(30)
-  },
-  listOldAvatarContent: {
-    gap: 10,            // khoảng cách giữa các phần tử
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  editIcon: {
-    position: 'absolute',
-    right: 90,
-    top: 108,
-    padding: 7,
-    borderRadius: 50,
-    backgroundColor: 'white',
-    shadowColor: theme.colors.textLight,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 7,
-    backgroundColor: '#ccc'
+    gap: 5,
   },
   nameProfile: {
     fontSize: hp(3),
-    alignSelf: 'center',
-    marginTop: 10,
     fontWeight: theme.fonts.bold,
     color: '#46c9e9',
     textShadowColor: 'rgba(100,100,100,0.8)', // màu bóng
     textShadowOffset: { width: 2, height: 2 }, // lệch theo x, y
     textShadowRadius: 4, // độ mờ bóng   
   },
-  bioProfile: {
-    fontSize: hp(1.7),
-    alignSelf: 'center',
-    marginTop: 6,
-    marginBottom: 10,
-    fontWeight: theme.fonts.medium,
-    color: '#ccc',
-    textAlign: 'center',
-    width: wp(85),
-    fontStyle: 'italic',
+  bioContainer: {
+    width: '100%',
+    gap: 5,
+    height: hp(20),
+    alignItems: 'center'
   },
   info: {
     flex: 1,
@@ -293,20 +254,22 @@ const styles = StyleSheet.create({
     color: '#d1f0f7',
     textShadowColor: 'rgba(0,0,0,0.6)', // màu bóng
     textShadowOffset: { width: 1, height: 1 }, // lệch theo x, y
-    textShadowRadius: 2, // độ mờ bóng   
-    marginVertical: 20
+    textShadowRadius: 2, // độ mờ bóng
+    paddingVertical: 5
   },
   contentInfo: {
     flex: 1,
     fontSize: hp(1.5),
     alignContent: 'center',
-    gap: 10,
+    gap: 15,
+    paddingTop: 10
   },
   itemInfo: {
     flexDirection: 'row',
     width: '85%',          // hoặc wp(80) nếu dùng responsive
     justifyContent: 'space-between', // căn đều title + detail
     gap: 8,
+    alignItems: 'center'
   },
   titleItemInfo: {
     flex: 3,

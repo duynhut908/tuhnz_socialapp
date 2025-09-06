@@ -8,11 +8,12 @@ export const theme = {
 
         primaryApp:'#bbe8ed',
         text: '#494949',
-        textLight: '#7C7C7C',
+        textLight: '#d1f0f7',
         textDark: '#1D1D1D',
 
         rose: '#ef4444',
-        roseLight: '#f87171'
+        roseLight: '#f87171',
+        check: '#00ff4f'
     },
     fonts: {
         medium: '500',

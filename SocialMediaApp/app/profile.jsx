@@ -66,7 +66,7 @@ const UserBody = ({ user, router }) => {
   const [selectedTab, setSelectedTab] = useState("profile");
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([
-    { label: "Profile", value: "edit", color: "#68c8e5" },
+    { label: "Edit", value: "edit", color: "#68c8e5" },
     { label: "Posts", value: "story", color: "#c382f5" },
     { label: "Album", value: "image", color: "#86d94d" },
     { label: "Video", value: "video", color: "#f15945" },
@@ -88,6 +88,13 @@ const UserBody = ({ user, router }) => {
       });
       setSelectedTab("profile")
     }
+    else if (selectedTab === 'edit') {
+      // đảm bảo chỉ navigate khi có dữ liệu và component mount
+      router.push({
+        pathname: 'editProfile',
+      });
+      setSelectedTab("profile")
+    }
     else if (selectedTab === 'video') {
       // đảm bảo chỉ navigate khi có dữ liệu và component mount
       router.push({
@@ -101,7 +108,7 @@ const UserBody = ({ user, router }) => {
   const renderContent = () => {
     switch (selectedTab) {
       case "edit":
-        return <Text>Edit Profile</Text>;
+        return <Text></Text>;
       case "story":
         return <Text></Text>;
       case "image":
@@ -302,13 +309,12 @@ const styles = StyleSheet.create({
     top: 108,
     padding: 7,
     borderRadius: 50,
-    backgroundColor: 'white',
     shadowColor: theme.colors.textLight,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 5,
     elevation: 7,
-    backgroundColor: '#ccc'
+    backgroundColor: '#b5b5b5'
   },
   nameProfile: {
     fontSize: hp(3),

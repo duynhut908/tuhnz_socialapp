@@ -5,7 +5,7 @@ import BackButton from './BackButton'
 import { hp } from '../helpers/common'
 import { theme } from '../constants/theme'
 
-const Header = ({ title, showBackButton = false, mb = 10 }) => {
+const Header = ({ title, showBackButton = false, mb = 10, onBackPress }) => {
     const router = useRouter();
 
     return (
@@ -17,7 +17,7 @@ const Header = ({ title, showBackButton = false, mb = 10 }) => {
             {
                 showBackButton && (
                     <View style={styles.backButton}>
-                        <BackButton router={router} />
+                        <BackButton router={router} onPress={onBackPress} />
                     </View>
                 )
             }
