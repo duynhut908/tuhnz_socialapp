@@ -1,4 +1,4 @@
-import { Alert, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import SrceenWrapper from '../components/SrceenWrapper'
 import { AuthContext } from '../context/AuthContext'
@@ -36,7 +36,7 @@ const homeapp = () => {
             console.log(err)
         }
     }
- 
+
     const { isLoading, error, data } = useQuery({
         queryKey: ["posts", currentUser], queryFn: () =>
             makeRequest.get("/posts/").then((res) => {
@@ -47,51 +47,59 @@ const homeapp = () => {
     return (
         <SrceenWrapper bg="white">
             <StatusBar style="dark" />
-                <View style={styles.header}>
-                    <ImageBackground
-                        source={require('../assets/images/homeapp1.jpg')}
-                        style={styles.backgroundTitle}
-                        resizeMode="cover"
-                    >
-                        <View style={{
-                            ...StyleSheet.absoluteFillObject,
-                            backgroundColor: 'rgba(0,0,0,0.35)', // darken ảnh
-                        }} />
-                        <Text style={styles.title}>TUHNZ</Text>
-                    </ImageBackground>
+            <View style={styles.header}>
+                <ImageBackground
+                    source={require('../assets/images/homeapp1.jpg')}
+                    style={styles.backgroundTitle}
+                    resizeMode="cover"
+                >
+                    <View style={{
+                        ...StyleSheet.absoluteFillObject,
+                        backgroundColor: 'rgba(0,0,0,0.35)', // darken ảnh
+                    }} />
+                    <Text style={styles.title}>TUHNZ</Text>
+                </ImageBackground>
 
-                    <View style={styles.icons}>
-                        <Pressable>
-                            <Icon name="newPost" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('newPost')} />
-                        </Pressable>
-                        <Pressable>
-                            <Icon name="messages" size={hp(4)} strokeWidth={2} color='#c4d3d9' />
-                        </Pressable>
-                        <Pressable>
-                            <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('profile')} />
-                        </Pressable>
+                <View style={styles.icons}>
+                    <Pressable>
+                        <Icon name="newPost" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('newPost')} />
+                    </Pressable>
+                    <Pressable>
+                        <Icon name="messages" size={hp(4)} strokeWidth={2} color='#c4d3d9' />
+                    </Pressable>
+                    <Pressable>
+                        <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('profile')} />
+                    </Pressable>
+                </View>
+            </View>
+            <View style={styles.body}>
+                {isLoading ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color={theme.colors.check} />
                     </View>
-                </View>
-                <View style={styles.body}>
-
-                    <Posts posts={data} />
-
-                </View>
-                <View style={styles.footer}>
-                    <Pressable style={styles.iconsFooter}>
-                        <Icon name="home" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
-                    </Pressable>
-                    <Pressable style={styles.iconsFooter}>
-                        <Icon name="search" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
-                    </Pressable>
-                    <Pressable style={styles.iconsFooter}>
-                        <Icon name="notify" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
-                    </Pressable>
-                    <Pressable style={styles.iconsFooter}>
-                        <Icon name="more" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
-                    </Pressable>
-                </View>
-                {/* <View>
+                ) : error ? (
+                    <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>
+                        {error?.message || "Error"}
+                    </Text>
+                ) : (
+                    <Posts posts={data?.length ? data : []} />
+                )}
+            </View>
+            <View style={styles.footer}>
+                <Pressable style={styles.iconsFooter}>
+                    <Icon name="home" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
+                </Pressable>
+                <Pressable style={styles.iconsFooter}>
+                    <Icon name="search" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
+                </Pressable>
+                <Pressable style={styles.iconsFooter}>
+                    <Icon name="notify" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
+                </Pressable>
+                <Pressable style={styles.iconsFooter}>
+                    <Icon name="more" size={hp(4.2)} strokeWidth={2} color='#c4d3d9' />
+                </Pressable>
+            </View>
+            {/* <View>
                     <Text style={{ color: "white" }}>Chào mừng đến với Home App</Text>
                     <Button title={'Logout'} loading={loading} onPress={onSubmit} />
                     </View>*/}

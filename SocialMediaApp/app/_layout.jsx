@@ -12,7 +12,7 @@ const _layout = () => {
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
                 <Stack
-                initialRouteName="homeapp"
+                    //initialRouteName="messages" //chỉ set khác homeapp, set homeapp sẽ bị render 2 lần
                     screenOptions={{
 
                         headerShown: false,
