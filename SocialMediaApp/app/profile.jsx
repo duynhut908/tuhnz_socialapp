@@ -17,17 +17,19 @@ import PageA from './pageA';
 import { useQuery } from '@tanstack/react-query';
 import { makeRequest } from '../api/axios';
 const profile = () => {
+  const { handleLogout } = useContext(AuthContext)
   const params = useLocalSearchParams(); // trả về object chứa tất cả params
   const note = JSON.parse(params.user);          // lấy giá trị note
   const router = useRouter()
   const { isLoading, error, data } = useQuery({
     queryKey: ["user", note?.username], queryFn: () =>
-        makeRequest.get("/users/" + note?.username).then((res) => {
-            return res.data;
-        }),
+      makeRequest.get("/users/" + note?.username).then((res) => {
+        return res.data;
+      }),
     enabled: !!note,
-})
+  })
   const onLogout = async () => {
+    console.log("đến đây")
     try {
       await handleLogout();
       router.replace('/welcome');
@@ -66,9 +68,9 @@ const UserHeader = ({ user, router, handleLogout }) => {
     <View style={styles.header}>
       <View>
         <Header title="Profile" showBackButton={true} />
-        {currentUser?.username === user?.username && <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        {currentUser?.username === user?.username ? <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="logout" color={theme.colors.rose} />
-        </TouchableOpacity>}
+        </TouchableOpacity> : <></>}
       </View>
     </View >
   )
