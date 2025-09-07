@@ -10,4 +10,7 @@ export const authApi = {
   logout: async () => {
     return await makeRequest.post("auth/logout");
   },
+  getUser: async (username) => {
+    return await makeRequest.get("users/" + username)
+  }
 };

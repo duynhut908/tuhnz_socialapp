@@ -64,13 +64,24 @@ const UserHeader = ({ user, router, handleLogout }) => {
 }
 const UserBody = ({ user, router }) => {
   const [selectedTab, setSelectedTab] = useState("profile");
+  const { currentUser } = useContext(AuthContext)
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    { label: "Edit", value: "edit", color: "#68c8e5" },
+  const defaultItems = [
     { label: "Posts", value: "story", color: "#c382f5" },
     { label: "Album", value: "image", color: "#86d94d" },
     { label: "Video", value: "video", color: "#f15945" },
-  ]);
+  ];
+
+  const [items, setItems] = useState(() => {
+    // Nếu là profile của mình thì thêm "Edit" vào đầu danh sách
+    if (currentUser?.username === user?.username) {
+      return [
+        { label: "Edit", value: "edit", color: "#68c8e5" },
+        ...defaultItems,
+      ];
+    } 
+    return defaultItems;
+  });
   useEffect(() => {
     if (selectedTab === 'image') {
       // đảm bảo chỉ navigate khi có dữ liệu và component mount
