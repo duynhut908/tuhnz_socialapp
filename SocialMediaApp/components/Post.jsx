@@ -1,10 +1,10 @@
-import { View, Text, Image, StyleSheet, Pressable, useWindowDimensions } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import { View, Text, Image, StyleSheet, Pressable, useWindowDimensions, Animated } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Video } from 'expo-av';
 import { VideoFullscreenUpdate } from 'expo-av';
 import moment from 'moment'
 import { makeRequest } from "../api/axios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Avatar from "./Avatar";
 import { hp } from "../helpers/common";
 import Picture from "./Picture";
@@ -15,6 +15,7 @@ import { LongPressGestureHandler } from "react-native-gesture-handler";
 import Icon from "../assets/icons";
 import RenderHtml from 'react-native-render-html';
 import { useRouter } from "expo-router";
+import { AuthContext } from "../context/AuthContext";
 const Post = ({ data }) => {
   const { isLoading: isImg, error: errImg, data: datImg } = useQuery({
     queryKey: ["imgs", data?.id], queryFn: () =>
@@ -22,8 +23,47 @@ const Post = ({ data }) => {
         return res.data;
       })
   })
+  const { isLoading: islike, error: errlike, data: dataLike } = useQuery({
+    queryKey: ["like", data?.id], queryFn: () =>
+      makeRequest.get("/likes?postId=" + data?.id).then((res) => {
+        return res.data;
+      })
+  })
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { currentUser } = useContext(AuthContext)
+  const queryClient = useQueryClient()
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const handleLike = () => {
+    Animated.sequence([
+      Animated.spring(scaleAnim, {
+        toValue: 1.4,
+        friction: 3,
+        useNativeDriver: true
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true
+      })
+    ]).start();
+    const liked = dataLike?.includes(currentUser?.username)
+    likeMutation.mutate(liked);
+  }
+  const likeMutation = useMutation({
+    mutationFn: (liked) => {
+      if (liked) {
+        return makeRequest.delete(`/likes?postId=${data?.id}`);
+      }
+      return makeRequest.post("/likes", { postId: data?.id });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["like", data?.id],
+      });
+    },
+  });
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -59,10 +99,12 @@ const Post = ({ data }) => {
       {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.iconInPost}>
-          <Pressable>
-            <Icon name='heart' color='red' size='20' />
+          <Pressable onPress={handleLike}>
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <Icon name='heart' color={`${dataLike?.includes(currentUser?.username) ? 'red' : 'white'}`} size='20' />
+            </Animated.View>
           </Pressable>
-          <Text>150</Text>
+          <Text>{dataLike?.length}</Text>
         </View>
         <View style={styles.iconInPost}>
           <Pressable>

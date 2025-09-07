@@ -5,7 +5,7 @@ import { makeRequest } from '../api/axios';
 import { useQuery } from '@tanstack/react-query';
 import Avatar from './Avatar';
 import { hp, wp } from '../helpers/common';
-
+const sizeAvatar = hp(5)
 const Message = ({ mess }) => {
     const { currentUser } = useContext(AuthContext)
 
@@ -16,18 +16,18 @@ const Message = ({ mess }) => {
                 return res.data;
             })
     })
-
-
+    console.log(typemess)
     return (
         <View style={styles.messageCard}>
-            {mess.last === 'last' && typemess === 'received' ?
-                <View style={styles.avatarLastMess}>
-                    <Avatar size={hp(4)} link={dataUserMess?.pic_avatar} />
-                </View> :
-                <View>
-                    <View style={styles.avatarLastMess}>
-                    </View>
-                </View>}
+            {typemess === 'received' ? (
+                mess.last === 'last' ? (
+                    <Avatar size={sizeAvatar} link={dataUserMess?.pic_avatar} />
+                ) : (
+                    <View style={{ width: sizeAvatar, height: sizeAvatar }} />
+                )
+            ) : (
+                <View style={{ width: sizeAvatar }} />
+            )}
             <Text style={[styles.message, styles[`message-${typemess}`]]}>{mess?.content}</Text>
         </View>
     )
@@ -38,11 +38,12 @@ export default Message
 const styles = StyleSheet.create({
     messageCard: {
         gap: 10,
-        alignItems: 'flex-start'
+        alignItems: 'flex-end',
+        flexDirection: 'row'
     },
     avatarLastMess: {
-        width: hp(4),
-        height: hp(4),
+        width: sizeAvatar,
+        height: sizeAvatar,
         overflow: 'hidden',
         position: 'relative',
         borderRadius: '50%',
