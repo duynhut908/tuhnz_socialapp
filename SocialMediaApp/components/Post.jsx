@@ -14,6 +14,7 @@ import VideoPlayer from 'expo-video-player';
 import { LongPressGestureHandler } from "react-native-gesture-handler";
 import Icon from "../assets/icons";
 import RenderHtml from 'react-native-render-html';
+import { useRouter } from "expo-router";
 const Post = ({ data }) => {
   const { isLoading: isImg, error: errImg, data: datImg } = useQuery({
     queryKey: ["imgs", data?.id], queryFn: () =>
@@ -21,11 +22,15 @@ const Post = ({ data }) => {
         return res.data;
       })
   })
+  const router = useRouter();
   const { width } = useWindowDimensions();
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <Pressable style={styles.header} onPress={() => router.push({
+        pathname: 'profile',
+        params: { user: JSON.stringify(data) },
+      })}>
         <Avatar size={hp(5)} link={data?.avatar} />
         <View style={{ marginLeft: 10 }}>
           <Text style={styles.name}>{data?.name}</Text>
@@ -33,7 +38,7 @@ const Post = ({ data }) => {
             {moment(data?.createAt).fromNow()}
           </Text>
         </View>
-      </View>
+      </Pressable>
       {/* Content */}
       <View style={styles.body}>
         <RenderHtml

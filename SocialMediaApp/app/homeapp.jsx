@@ -68,7 +68,10 @@ const homeapp = () => {
                         <Icon name="messages" size={hp(4)} strokeWidth={2} color='#c4d3d9' />
                     </Pressable>
                     <Pressable>
-                        <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push('profile')} />
+                        <Icon name="user" size={hp(3.5)} strokeWidth={2} color='#c4d3d9' onPress={() => router.push({
+                            pathname: 'profile',
+                            params: { user: JSON.stringify(currentUser) },
+                        })} />
                     </Pressable>
                 </View>
             </View>

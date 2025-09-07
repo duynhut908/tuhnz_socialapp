@@ -1,7 +1,7 @@
 import { Alert, ImageBackground, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, Keyboard, Pressable } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../context/AuthContext'
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import SrceenWrapper from '../components/SrceenWrapper';
 import Header from '../components/Header';
 import { hp, wp } from '../helpers/common';
@@ -14,9 +14,19 @@ import { useNavigation } from '@react-navigation/native';
 import format from "date-fns/format";
 import parseISO from "date-fns/parseISO";
 import PageA from './pageA';
+import { useQuery } from '@tanstack/react-query';
+import { makeRequest } from '../api/axios';
 const profile = () => {
-  const { currentUser, setCurrentUser, handleLogout } = useContext(AuthContext);
+  const params = useLocalSearchParams(); // trả về object chứa tất cả params
+  const note = JSON.parse(params.user);          // lấy giá trị note
   const router = useRouter()
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["user", note?.username], queryFn: () =>
+        makeRequest.get("/users/" + note?.username).then((res) => {
+            return res.data;
+        }),
+    enabled: !!note,
+})
   const onLogout = async () => {
     try {
       await handleLogout();
@@ -43,21 +53,22 @@ const profile = () => {
   }
   return (
     <SrceenWrapper>
-      <UserHeader user={currentUser} router={router} handleLogout={submitLogout} />
-      <UserBody user={currentUser} router={router} />
+      <UserHeader user={data} router={router} handleLogout={submitLogout} />
+      <UserBody user={data} router={router} />
     </SrceenWrapper>
   )
 }
 
 
 const UserHeader = ({ user, router, handleLogout }) => {
+  const { currentUser } = useContext(AuthContext)
   return (
     <View style={styles.header}>
       <View>
         <Header title="Profile" showBackButton={true} />
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        {currentUser?.username === user?.username && <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="logout" color={theme.colors.rose} />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
     </View >
   )
@@ -79,7 +90,7 @@ const UserBody = ({ user, router }) => {
         { label: "Edit", value: "edit", color: "#68c8e5" },
         ...defaultItems,
       ];
-    } 
+    }
     return defaultItems;
   });
   useEffect(() => {
