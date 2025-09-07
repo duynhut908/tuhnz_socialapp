@@ -1,16 +1,29 @@
-import { Image, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { Dimensions, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import React, { useState } from 'react'
+import FullScreenImage from './FullScreenImage';
 
 const Picture = ({ size, link }) => {
+    const [isFullScreen, setIsFullScreen] = useState(false);
+
     return (
-        <View style={[styles.container,
-        {
-            width: size,
-            height: size,
-            borderRadius: 8,
-        }]}>
-            <Image style={styles.avatarImage} resizeMode='cover' source={link ? { uri: link } : require('../assets/images/picture1.jpg')} />
-        </View>
+        <>
+            <Pressable
+                onPress={() => setIsFullScreen(true)}
+                style={[styles.container,
+                {
+                    width: size,
+                    height: size,
+                    borderRadius: 8,
+                }]}>
+                <Image style={styles.avatarImage} resizeMode='cover' source={link ? { uri: link } : require('../assets/images/picture1.jpg')} />
+            </Pressable>
+            {/* Full Screen Modal */}
+            <FullScreenImage
+                visible={isFullScreen}
+                link={link}
+                onClose={() => setIsFullScreen(false)}
+            />
+        </>
     )
 }
 

@@ -10,6 +10,7 @@ import { hp, wp } from '../helpers/common'
 import Input from '../components/Input'
 import Button from '../components/Button'
 import { AuthContext } from '../context/AuthContext'
+import ErrorBanner from '../components/ErrorBanner'
 
 const SignUp = () => {
     const router = useRouter();
@@ -18,13 +19,14 @@ const SignUp = () => {
     const passwordRef = useRef("");
     const [loading, setLoading] = useState(false)
     const { signup } = useContext(AuthContext);
+    const [error, setError] = useState(null);
     const onSubmit = async () => {
         console.log(nameRef.current, emailRef.current, passwordRef.current)
         if (!emailRef.current || !passwordRef.current || !nameRef.current) {
             Alert.alert('Sign Up', "Please fill all the fields!");
             return;
-        } 
-        try { 
+        }
+        try {
             setLoading(true);
             await signup({
                 name: nameRef.current,
@@ -34,7 +36,19 @@ const SignUp = () => {
             Alert.alert("Sign Up", "Account created successfully!");
             router.push("login"); // hoặc push sang home nếu login tự động
         } catch (err) {
-            Alert.alert("Sign Up Failed", err?.message || "Something went wrong");
+            if (err.response) {
+                if (err.response.status === 409) {
+                    setError("Email đã tồn tại, vui lòng thử lại!");
+                } else if (err.response.status === 500) {
+                    setError("Lỗi server, vui lòng thử lại sau!");
+                } else if (err.response.status === 400) {
+                    setError("Điền đẩy đủ dữ liệu!");
+                } else {
+                    setError(err.response.data?.error || "Có lỗi xảy ra!");
+                }
+            } else {
+                setError("Không thể kết nối đến server");
+            }
         } finally {
             setLoading(false);
         }
@@ -86,7 +100,7 @@ const SignUp = () => {
                         secureTextEntry
                         onChangeText={value => passwordRef.current = value}
                     />
-
+                    <ErrorBanner message={error} />
                     <Button title={'Sign up'} loading={loading} onPress={onSubmit} />
                 </View>
 
@@ -129,7 +143,7 @@ const styles = StyleSheet.create({
         textShadowRadius: 4, // độ mờ bóng
     },
     form: {
-        gap: 25
+        gap: 20
     },
     forgotPassword: {
         textAlign: 'right',

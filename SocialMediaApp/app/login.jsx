@@ -10,6 +10,7 @@ import { hp, wp } from '../helpers/common'
 import Input from '../components/Input'
 import Button from '../components/Button'
 import { AuthContext } from '../context/AuthContext'
+import ErrorBanner from '../components/ErrorBanner'
 
 const login = () => {
     const router = useRouter();
@@ -17,6 +18,7 @@ const login = () => {
     const passwordRef = useRef("");
     const [loading, setLoading] = useState(false)
     const { login, currentUser } = useContext(AuthContext);
+    const [error, setError] = useState(null);
     const onSubmit = async () => {
         if (!emailRef.current || !passwordRef.current) {
             Alert.alert('Login', "Please fill all the fields!");
@@ -28,15 +30,32 @@ const login = () => {
                 username: emailRef.current,
                 password: passwordRef.current,
             })
+
             router.replace('homeapp')
         }
         catch (err) {
-            Alert.alert("Login Failed", err?.message || "Something went wrong");
+            if (err.response) {
+                // lỗi từ server có status code
+                if (err.response.status === 400) {
+                    setError("Sai mật khẩu, vui lòng thử lại!");
+                } else if (err.response.status === 404) {
+                    setError("Tài khoản không tồn tại trong hệ thống!");
+                } else if (err.response.status === 500) {
+                    setError("Lỗi server, vui lòng thử lại sau!");
+                } else if (err.response.status === 403) {
+                    setError("Tài khoản của bạn đã bị khóa!");
+                }else {
+                    setError(err.response.data?.error || "Có lỗi xảy ra!");
+                }
+            } else {
+                // lỗi network hoặc axios
+                setError("Không thể kết nối đến server");
+            }
         } finally {
             setLoading(false);
         }
     }
-   
+
     return (
         <SrceenWrapper bg="white">
             <StatusBar style='dark' />
@@ -80,6 +99,7 @@ const login = () => {
                         secureTextEntry
                         onChangeText={value => passwordRef.current = value}
                     />
+                    <ErrorBanner message={error} />
                     <Text style={styles.forgotPassword}>
                         Forgot Password
                     </Text>
@@ -126,7 +146,7 @@ const styles = StyleSheet.create({
         textShadowRadius: 4, // độ mờ bóng
     },
     form: {
-        gap: 25
+        gap: 20
     },
     forgotPassword: {
         textAlign: 'right',
