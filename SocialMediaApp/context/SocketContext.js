@@ -12,20 +12,16 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (currentUser?.username) {
-      // Nếu có user => kết nối socket
-      socketRef.current = io("http://192.168.1.7:8900");
+      socketRef.current = io("http://192.168.1.3:8900");
       setSocket(socketRef.current);
 
       socketRef.current.emit("login", currentUser.username);
 
-      // Lắng nghe sự kiện từ server
       socketRef.current.on("forceLogout", (data) => {
         console.log("Force logout:", data.message);
-        // Có thể gọi handleLogout từ AuthContext ở đây nếu muốn
       });
 
     } else {
-      // Nếu không có user => disconnect socket
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;

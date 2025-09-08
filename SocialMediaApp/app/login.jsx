@@ -1,4 +1,4 @@
-import { Alert, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Alert, ImageBackground, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import React, { useContext, useRef, useState } from 'react'
 import SrceenWrapper from '../components/SrceenWrapper'
 import { theme } from '../constants/theme'
@@ -44,7 +44,7 @@ const login = () => {
                     setError("Lỗi server, vui lòng thử lại sau!");
                 } else if (err.response.status === 403) {
                     setError("Tài khoản của bạn đã bị khóa!");
-                }else {
+                } else {
                     setError(err.response.data?.error || "Có lỗi xảy ra!");
                 }
             } else {
@@ -59,6 +59,7 @@ const login = () => {
     return (
         <SrceenWrapper bg="white">
             <StatusBar style='dark' />
+
             <ImageBackground
                 source={require('../assets/images/backgroudWelcom.jpg')}
                 style={styles.container}

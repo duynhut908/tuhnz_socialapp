@@ -33,6 +33,9 @@ import SetImage from './SetImage';
 import SaveImage from './SaveImage';
 import DeleteImage from './DeleteImage';
 import NewImage from './NewImage';
+import Sticker from './Sticker';
+import Conversation from './Conversation';
+import Dot from './Dot';
 const icons = {
     home: Home,
     arrowleft: ArrowLeft,
@@ -65,7 +68,10 @@ const icons = {
     setImg: SetImage,
     saveImg: SaveImage,
     delImg: DeleteImage,
-    newImg: NewImage
+    newImg: NewImage,
+    sticker: Sticker,
+    conversation: Conversation,
+    dot: Dot
 }
 
 const Icon = ({ name, ...props }) => {

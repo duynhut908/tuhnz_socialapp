@@ -6,14 +6,18 @@ export const theme = {
         darkLight: '#E1E1E1',
         gray: '#e3e3e3',
 
-        primaryApp:'#bbe8ed',
+        primaryApp: '#bbe8ed',
         text: '#494949',
         textLight: '#d1f0f7',
         textDark: '#1D1D1D',
 
         rose: '#ef4444',
         roseLight: '#f87171',
-        check: '#00ff4f'
+        check: '#00ff4f',
+        mess: '#57d8f1',
+        batwhite: '#dddcdc',
+        messWeight:'#5da7eb',
+        homeYellow:'#e6eb71'
     },
     fonts: {
         medium: '500',

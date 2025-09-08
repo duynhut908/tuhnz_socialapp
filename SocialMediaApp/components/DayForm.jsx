@@ -15,7 +15,7 @@ const DayForm = ({ profile, handleChange }) => {
             handleChange("birthday", format(selectedDate, "yyyy-MM-dd"));
         }
     };
-
+    
     return (
         <View style={{ width: wp(30), flexDirection: 'row', alignItems: 'center' }}>
 

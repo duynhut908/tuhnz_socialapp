@@ -16,12 +16,13 @@ const Message = ({ mess }) => {
                 return res.data;
             })
     })
-    console.log(typemess)
     return (
         <View style={styles.messageCard}>
             {typemess === 'received' ? (
                 mess.last === 'last' ? (
-                    <Avatar size={sizeAvatar} link={dataUserMess?.pic_avatar} />
+                    <View style={{ width: sizeAvatar, height: sizeAvatar }}>
+                        <Avatar size={sizeAvatar} link={dataUserMess?.pic_avatar} />
+                    </View>
                 ) : (
                     <View style={{ width: sizeAvatar, height: sizeAvatar }} />
                 )
