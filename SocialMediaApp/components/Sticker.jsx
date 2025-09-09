@@ -6,7 +6,7 @@ const Sticker = ({ size, link, idSticker, onPress }) => {
     return (
         <>
             <Pressable
-                onPress={() => onPress(idSticker)}
+                onPress={() => onPress && onPress(idSticker)}
                 style={[styles.container,
                 {
                     width: size,
