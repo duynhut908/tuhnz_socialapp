@@ -1,8 +1,8 @@
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import Header from '../components/Header'
 import SrceenWrapper from '../components/SrceenWrapper'
-import { hp } from '../helpers/common'
+import { hp, wp } from '../helpers/common'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { makeRequest } from '../api/axios'
 import { useSocket } from '../context/SocketContext'
@@ -13,6 +13,10 @@ import Input_ver2 from '../components/Input_ver2'
 import { theme } from '../constants/theme'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useLocalSearchParams } from 'expo-router'
+import Picture from '../components/Picture'
+import Sticker from '../components/Sticker'
+import * as ImagePicker from 'expo-image-picker'
+import { cloudinaryUpload } from '../api/axiosUpload'
 const Messages = () => {
     const socket = useSocket();
     const { currentUser } = useContext(AuthContext)
@@ -22,6 +26,7 @@ const Messages = () => {
     const params = useLocalSearchParams(); // trả về object chứa tất cả params
     const note = JSON.parse(params.roomMessage);          // lấy giá trị note
     const room = note[0]?.roomId
+    // const room = 3
     const { isLoading, error, data: messagesOfRoom } = useQuery({
         queryKey: ["dialog", room], queryFn: () =>
             makeRequest.get("/messages/" + room).then((res) => {
@@ -82,7 +87,8 @@ const Messages = () => {
     const [fixKeyboard, setFixKeyboard] = useState(0)
     useEffect(() => {
         const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
-            setFixKeyboard(hp(5)-2)
+            setFixKeyboard(hp(5) - 2);
+            setOpenSticker(false);
         });
         const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
             setFixKeyboard(0)
@@ -101,6 +107,7 @@ const Messages = () => {
     })
     const filteredMembers = member ? member.filter(m => m.username !== currentUser?.username) : [];
 
+    const [openSticker, setOpenSticker] = useState(false)
     return (
         <SrceenWrapper >
             <KeyboardAvoidingView
@@ -110,7 +117,8 @@ const Messages = () => {
             >
                 <UserHeader />
                 <MessagesOfRoom messages={messages} lastMessageRef={lastMessageRef} setIsAtBottom={setIsAtBottom} isAtBottom={isAtBottom} />
-                <Tool setMessages={setMessages} socket={socket} filteredMembers={filteredMembers} room={room} lastMessageRef={lastMessageRef} />
+                <Tool setMessages={setMessages} socket={socket} filteredMembers={filteredMembers} room={room} lastMessageRef={lastMessageRef} openSticker={openSticker} setOpenSticker={setOpenSticker} />
+                {openSticker && <StickerPanel socket={socket} setOpenSticker={setOpenSticker} setMessages={setMessages} lastMessageRef={lastMessageRef} room={room} filteredMembers={filteredMembers} />}
             </KeyboardAvoidingView>
         </SrceenWrapper>
     )
@@ -126,7 +134,6 @@ const MessagesOfRoom = ({ messages, lastMessageRef, setIsAtBottom }) => {
             contentSize.height - paddingToBottom;
         setIsAtBottom(isBottom);
     };
-
     return (
         <ScrollView
             style={[styles.listMessages, { flex: 1, }]}
@@ -153,7 +160,7 @@ const UserHeader = ({ user, router }) => {
         </View >
     )
 }
-const Tool = ({ setMessages, socket, filteredMembers, room, lastMessageRef }) => {
+const Tool = ({ setMessages, socket, filteredMembers, room, lastMessageRef, openSticker, setOpenSticker }) => {
     const [newMess, setNewMess] = useState('');
     const { currentUser } = useContext(AuthContext)
     const inputRef = useRef(null);
@@ -181,25 +188,97 @@ const Tool = ({ setMessages, socket, filteredMembers, room, lastMessageRef }) =>
             const msg = {
                 username: currentUser?.username,
                 content: newMess.trim(),
-                last: 'none'
+                last: 'none',
+                type_sent: 'mess'
             }
             socket?.emit('sendMessage', { message: msg, member: filteredMembers });
             setMessages((prevMessages) => [...prevMessages, msg]);
-            mutationSendMess.mutate(msg);
-            setNewMess('');
+            try {
+                mutationSendMess.mutate(msg);
+            } catch (err) {
+                console.warn('error: ', err)
+            } finally {
+                setNewMess('');
+            }
+
             lastMessageRef.current.scrollToEnd({ animated: true });
         } else {
             setNewMess('')
         }
         inputRef.current.focus();
     }
+    const toggleSticker = () => {
+        Keyboard.dismiss();
+        setOpenSticker(prev => !prev);
+    };
 
+    const [loading, setLoading] = useState(false);
+    const uploadPicture = async (formData) => {
+        if (loading) return;
+        try {
+            setLoading(true); // Bắt đầu hiển thị loading
+            const response = await cloudinaryUpload(formData);
+            console.log("response" + response.secure_url)
+
+            const msg = {
+                username: currentUser?.username,
+                last: 'none',
+                type_sent: 'image',
+                link_image: response.secure_url
+            }
+            socket?.emit('sendMessage', { message: msg, member: filteredMembers });
+            setMessages((prevMessages) => [...prevMessages, msg]);
+
+            mutationSendMess.mutate(msg);
+
+            lastMessageRef.current.scrollToEnd({ animated: true });
+        } catch (error) {
+            console.error('Error uploading image:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const upImageToSend = async (isImage) => {
+        console.log("Đã ấn up Image")
+        let mediaConfig = {
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,// false và xóa aspect là không crop ảnh //aspect: [2, 3], 
+            quality: 0.7
+        }
+        if (!isImage) {
+            mediaConfig = {
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsEditing: true,
+            }
+        }
+        let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
+
+        if (!result.canceled) {
+
+            const pickedFile = result.assets[0];
+
+            // Tạo FormData
+            const formData = new FormData();
+            formData.append('file', {
+                uri: pickedFile.uri,
+                type: pickedFile.type === 'video' ? 'video/mp4' : 'image/jpeg',
+                name: pickedFile.fileName || (pickedFile.type === 'video' ? 'video.mp4' : 'photo.jpg'),
+            });
+
+            uploadPicture(formData); // gửi FormData
+
+        }
+    }
     return (
         <View style={styles.tool}>
-            <TouchableOpacity style={styles.iconTool}
-            >
-                <Icon name="sticker" size={hp(5)} fill={'#80cee9'} color={'black'} />
-            </TouchableOpacity>
+            {loading ? <View style={[styles.iconTool]}>
+                <ActivityIndicator size='small' color={theme.colors.check} />
+            </View> :
+                <TouchableOpacity style={styles.iconTool} onPress={() => toggleSticker()}
+                >
+                    <Icon name="sticker" size={hp(5)} fill={'#80cee9'} color={'black'} />
+                </TouchableOpacity>}
             <View style={styles.inPutTool}>
                 <TextInput
                     style={{
@@ -214,20 +293,90 @@ const Tool = ({ setMessages, socket, filteredMembers, room, lastMessageRef }) =>
                 />
             </View>
             <TouchableOpacity style={styles.iconTool}
-            //disabled={loading}
+                disabled={loading}
             //onPress={() => onPick(true)}
             >
                 <Icon name="more" size={hp(4.2)} color={'#ccc'} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconTool}
-            //disabled={loading}
-            onPress={() => handleSendMess()}
-            >
-                {newMess.trim() === '' ?
-                    <Icon name="image" size={hp(4.2)} color={'#87ce56'} /> :
-                    <Icon name="send" size={hp(4.2)} color={'#66e8ef'} />
-                }
-            </TouchableOpacity>
+            {loading ? <View style={[styles.iconTool]}>
+                <ActivityIndicator size='small' color={theme.colors.check} />
+            </View> :
+                <TouchableOpacity style={styles.iconTool}
+                    //disabled={loading}
+                    onPress={() => (newMess.trim() !== '') ? handleSendMess() : upImageToSend(true)}
+                >
+                    {newMess.trim() === '' ?
+                        <Icon name="image" size={hp(4.2)} color={'#87ce56'} /> :
+                        <Icon name="send" size={hp(4.2)} color={'#66e8ef'} />
+                    }
+                </TouchableOpacity>}
+        </View>
+    )
+}
+
+const StickerPanel = ({ setOpenSticker, socket, lastMessageRef, setMessages, room, filteredMembers }) => {
+    const { currentUser } = useContext(AuthContext)
+    const { isLoading, error, data: stickers } = useQuery({
+        queryKey: ["stickers"], queryFn: () =>
+            makeRequest.get("/messages/stickers/all").then((res) => {
+                return res.data;
+            })
+    })
+    const onPress = (id) => {
+        setOpenSticker(prev => !prev);
+        handleSendMess(id)
+    }
+
+    const queryClient = useQueryClient()
+    const mutationSendMess = useMutation({
+        mutationFn: (newMess) => makeRequest.post(`/messages/${room}`, newMess),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['dialog', room] });
+        },
+        onError: (error) => {
+            console.error('Failed to send message:', error);
+        },
+    })
+
+    const handleSendMess = (id_sticker) => {
+        if (id_sticker !== null) {
+            const msg = {
+                username: currentUser?.username,
+                last: 'none',
+                type_sent: 'sticker',
+                id_sticker: id_sticker
+            }
+            socket?.emit('sendMessage', { message: msg, member: filteredMembers });
+            setMessages((prevMessages) => [...prevMessages, msg]);
+            mutationSendMess.mutate(msg);
+            lastMessageRef.current.scrollToEnd({ animated: true });
+        } else {
+        }
+    }
+    const listSticker = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+    return (
+        <View style={styles.stickerPanel}>
+            <FlatList
+                data={stickers}
+                numColumns={4}
+                keyExtractor={(item) => item?.id.toString()}
+                columnWrapperStyle={{ justifyContent: "flex-start", marginBottom: 5, gap: 5 }}
+                contentContainerStyle={{ paddingTop: 5 }}
+                renderItem={({ item }) => (
+                    <Sticker size={wp(22)} link={item?.link} idSticker={item?.id} onPress={onPress}
+                    />
+                )}
+            />
+            {/* <FlatList
+                data={listSticker}
+                numColumns={4}
+                keyExtractor={(_, i) => i.toString()}
+                renderItem={({ item }) => (
+                    <TouchableOpacity onPress={() => handleSendSticker(item)}>
+                        <Image source={item} style={styles.stickerItem} />
+                    </TouchableOpacity>
+                )}
+            /> */}
         </View>
     )
 }
@@ -270,5 +419,23 @@ const styles = StyleSheet.create({
     },
     inPutTool: {
         flex: 6
-    }
+    },
+    stickerPanel: {
+        //backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderColor: '#ddd',
+        height: hp(30),
+        width: wp(100),
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 5
+    },
+    stickerItem: {
+        height: wp(22.5),
+        width: wp(22.5),
+        margin: 4,
+        resizeMode: 'contain',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 })

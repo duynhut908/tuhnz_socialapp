@@ -5,7 +5,10 @@ import { makeRequest } from '../api/axios';
 import { useQuery } from '@tanstack/react-query';
 import Avatar from './Avatar';
 import { hp, wp } from '../helpers/common';
+import Sticker from './Sticker';
+import PictureInMessage from './PictureInMessage';
 const sizeAvatar = hp(5)
+const sizeSticker = wp(25)
 const Message = ({ mess }) => {
     const { currentUser } = useContext(AuthContext)
 
@@ -13,6 +16,12 @@ const Message = ({ mess }) => {
     const { isLoading: isll, error: err, data: dataUserMess } = useQuery({
         queryKey: ["user", mess?.username], queryFn: () =>
             makeRequest.get("/users/" + mess?.username).then((res) => {
+                return res.data;
+            })
+    })
+    const { isLoading, error, data: sticker } = useQuery({
+        queryKey: ["sticker", mess?.id_sticker], queryFn: () =>
+            makeRequest.get("/messages/stickers/" + mess?.id_sticker).then((res) => {
                 return res.data;
             })
     })
@@ -29,7 +38,15 @@ const Message = ({ mess }) => {
             ) : (
                 <View style={{ width: sizeAvatar }} />
             )}
-            <Text style={[styles.message, styles[`message-${typemess}`]]}>{mess?.content}</Text>
+            {mess?.type_message === 'sticker' ?
+                <View style={[styles.sticker, styles[`sticker-${typemess}`]]}>
+                    <Sticker size={sizeSticker} link={sticker?.link} idSticker={mess?.id_sticker} />
+                </View> :
+                mess?.type_message === 'image' ?
+                    <View style={[styles.image, styles[`sticker-${typemess}`]]}>
+                        <PictureInMessage link={mess?.link_image} />
+                    </View> :
+                    <Text style={[styles.message, styles[`message-${typemess}`]]}>{mess?.content}</Text>}
         </View>
     )
 }
@@ -66,12 +83,28 @@ const styles = StyleSheet.create({
     },
     'message-sent': {
         backgroundColor: 'rgb(44, 54, 201)', // màu nền
-        marginLeft: 'auto', // đẩy sang phải (flex layout)
+        marginLeft: 'auto', // đẩy sang trái (flex layout)
         color: 'white', // màu chữ
     },
     'message-received': {
         backgroundColor: 'rgb(187, 225, 236)', // màu nền
         marginRight: 'auto', // đẩy sang phải (flex layout)
         color: 'black', // màu chữ
-    }
+    },
+    sticker: {
+        width: sizeSticker,
+        height: sizeSticker,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    'sticker-sent': {
+        marginLeft: 'auto', // đẩy sang trái (flex layout)
+    },
+    'sticker-received': {
+        marginRight: 'auto', // đẩy sang phải (flex layout)
+    },
+    image:{
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 })
