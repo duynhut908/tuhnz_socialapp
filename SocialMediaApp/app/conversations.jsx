@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Header from '../components/Header'
 import SrceenWrapper from '../components/SrceenWrapper'
 import { hp } from '../helpers/common'
@@ -7,6 +7,10 @@ import { theme } from '../constants/theme'
 import Icon from '../assets/icons'
 import Avatar from '../components/Avatar'
 import { useRouter } from 'expo-router'
+import { AuthContext } from '../context/AuthContext'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { makeRequest } from '../api/axios'
+import { SocketContext, useSocket } from '../context/SocketContext'
 
 const Conversations = () => {
     const [select, setSelect] = useState(0);
@@ -32,6 +36,9 @@ const Conversations = () => {
                 return <Text>Conversations</Text>;
         }
     };
+
+
+
     return (
         <SrceenWrapper >
             <View style={styles.header}>
@@ -69,31 +76,81 @@ const Conversations = () => {
 }
 const ListConversations = () => {
     const listmess = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+    const { currentUser } = useContext(AuthContext)
+    const { isLoading, error, data } = useQuery({
+        queryKey: ["rooms", currentUser?.username], queryFn: () =>
+            makeRequest.get("/rooms/user?username=" + currentUser?.username).then((res) => {
+                return res.data;
+            })
+    })
+
+    const socket = useSocket();
     return (
         <ScrollView
             style={[{ flex: 1, }]}
             contentContainerStyle={{ gap: 0 }}
         >
-            {listmess?.map((_, index) => (
-                <ItemConversation key={index} />
+            {data?.map((conversation, index) => (
+                <ItemConversation key={index} conversation={conversation} socket={socket} />
             ))}
         </ScrollView>
     );
 }
 const sizeAvatarDialog = hp(11)
-const ItemConversation = () => {
+const ItemConversation = ({ conversation, socket }) => {
     const router = useRouter();
+
+    const { currentUser } = useContext(AuthContext)
+    const { isLoading, error, data } = useQuery({
+        queryKey: ["dialog", conversation?.roomId], queryFn: () =>
+            makeRequest.get("/messages/" + conversation?.roomId).then((res) => {
+                return res.data;
+            })
+    })
+    const lastMess =  data?.[data.length - 1] || null;
+    const lastSent = lastMess?.username === currentUser?.username ? "Bạn" : lastMess?.name || "";
+    // const [lastSent, setLastSent] = useState('')
+    // useEffect(() => {
+    //     setLastSent(data ? (lastMess?.username === currentUser?.username) ? "Bạn" : lastMess?.name : null)
+    // }, [lastMess])
+    const { isLoading: il, error: e, data: member } = useQuery({
+        queryKey: ["memberChat", conversation?.roomId], queryFn: () =>
+            makeRequest.get("/rooms/members?roomId=" + conversation?.roomId).then((res) => {
+                return res.data;
+            })
+    })
+
+    const filteredMembers = member ? member.filter(m => m.username !== currentUser?.username) : [];
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleReceive = (msg) => {
+            queryClient.invalidateQueries(["dialog", conversation?.roomId]);
+        }
+
+        socket.on('receiveMessage', handleReceive);
+
+        return () => {
+            socket.off('receiveMessage');
+        };
+    }, [conversation?.roomId, socket, queryClient])
+
     const onMessRoom = () => {
-        router.push('messages')
+        router.push({
+            pathname: 'messages',
+            params: { roomMessage: JSON.stringify(member) },
+        });
     }
     return (
         <TouchableOpacity style={styles.itemConversationContainer} onPress={() => onMessRoom()}>
             <View style={styles.avatarForm}>
-                <Avatar size={sizeAvatarDialog - 15} />
+                <Avatar size={sizeAvatarDialog - 15} link={filteredMembers[0]?.pic_avatar} />
             </View>
             <View style={styles.contentDialog}>
-                <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">An Thời Đại</Text>
-                <Text style={styles.lastMessageInDialog} numberOfLines={1} ellipsizeMode="tail">Đây là một văn bản rất dài, dài đến mức không thể hiển thị hết trên một dòng</Text>
+                <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">{filteredMembers?.map(m => m.name).join(', ')}</Text>
+                <Text style={styles.lastMessageInDialog} numberOfLines={1} ellipsizeMode="tail">{lastSent}{lastMess?.content ? `: ${lastMess.content}` : ''}</Text>
             </View>
             <View style={styles.status}>
                 <Icon name='dot' color={theme.colors.mess} size={15} />

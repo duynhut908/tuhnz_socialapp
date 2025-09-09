@@ -12,13 +12,16 @@ import Icon from '../assets/icons'
 import Input_ver2 from '../components/Input_ver2'
 import { theme } from '../constants/theme'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useLocalSearchParams } from 'expo-router'
 const Messages = () => {
     const socket = useSocket();
     const { currentUser } = useContext(AuthContext)
     const [messages, setMessages] = useState([]);
     const lastMessageRef = useRef(null);
     const [isAtBottom, setIsAtBottom] = useState(true);
-    const room = 3
+    const params = useLocalSearchParams(); // trả về object chứa tất cả params
+    const note = JSON.parse(params.roomMessage);          // lấy giá trị note
+    const room = note[0]?.roomId
     const { isLoading, error, data: messagesOfRoom } = useQuery({
         queryKey: ["dialog", room], queryFn: () =>
             makeRequest.get("/messages/" + room).then((res) => {

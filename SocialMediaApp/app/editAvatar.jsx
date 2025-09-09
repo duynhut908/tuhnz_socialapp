@@ -17,6 +17,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { makeRequest } from '../api/axios'
 import * as ImagePicker from 'expo-image-picker'
 import { cloudinaryDeleteImage, cloudinaryUpload } from '../api/axiosUpload'
+
+
+const heightButtonIcon = hp(6)
+const widthButtonIcon = wp(22.5)
 const editAvatar = () => {
   const { currentUser, setCurrentUser } = useContext(AuthContext)
   const [delImg, setDelImg] = useState(null)
@@ -293,7 +297,7 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
         if (response) setAvatarUp(null)
 
       } catch (error) {
-        console.error('Error uploading image in fontend:', error);
+        console.warn('Ảnh này thuộc server khác, không thuộc server của TUHNZ:', error);
       } finally {
         setLoading(false);
         setSelect(false);
@@ -348,10 +352,10 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
     <View style={styles.myProfileContainer}>
       <View style={styles.avatarEdit}>
 
-        <Avatar size={hp(20)} link={avatarUp ? avatarUp?.url : select ? getAvatarById(select)?.link : currentUser?.pic_avatar} />
+        <Avatar size={wp(40)} link={avatarUp ? avatarUp?.url : select ? getAvatarById(select)?.link : currentUser?.pic_avatar} />
         {!loading ? <View style={styles.listInteractButton}>
-          <View style={{ height: hp(6), width: hp(11.5), opacity: isSet ? 0.5 : 1 }}>
-            <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
+          <View style={{ height: heightButtonIcon, width: widthButtonIcon, opacity: isSet ? 0.5 : 1 }}>
+            <ButtonIcon buttonStyle={{ height: heightButtonIcon, width: widthButtonIcon }}
               title="Set ảnh" name='setImg' color='#00ff4f'
               disablePress={isSet}
               hasShadow={false}
@@ -360,8 +364,8 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
               }}
             />
           </View>
-          <View style={{ height: hp(6), width: hp(11.5), opacity: isNew ? 0.5 : 1 }}>
-            <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
+          <View style={{ height: heightButtonIcon, width: widthButtonIcon, opacity: isNew ? 0.5 : 1 }}>
+            <ButtonIcon buttonStyle={{ height: heightButtonIcon, width: widthButtonIcon }}
               title="Ảnh mới" name='newImg' color='#b7e2ed'
               disablePress={isNew}
               hasShadow={false}
@@ -369,8 +373,8 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
                 onPick();
               }}
             /></View>
-          <View style={{ height: hp(6), width: hp(11.5), opacity: isSave ? 0.5 : 1 }}>
-            <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
+          <View style={{ height: heightButtonIcon, width: widthButtonIcon, opacity: isSave ? 0.5 : 1 }}>
+            <ButtonIcon buttonStyle={{ height: heightButtonIcon, width: widthButtonIcon }}
               title="Lưu ảnh" name='saveImg' color='#e7b861'
               disablePress={isSave}
               hasShadow={false}
@@ -378,8 +382,8 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
                 onSubmitSaveAvatar();
               }}
             /></View>
-          <View style={{ height: hp(6), width: hp(11.5), opacity: isDel ? 0.5 : 1 }}>
-            <ButtonIcon buttonStyle={{ height: hp(6), width: hp(11.5) }}
+          <View style={{ height: heightButtonIcon, width: widthButtonIcon, opacity: isDel ? 0.5 : 1 }}>
+            <ButtonIcon buttonStyle={{ height: heightButtonIcon, width: widthButtonIcon }}
               title="Xóa ảnh" name='delImg' color='#fc4f4a'
               disablePress={isDel}
               hasShadow={false}
