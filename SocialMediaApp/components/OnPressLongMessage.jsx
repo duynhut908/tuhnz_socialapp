@@ -1,19 +1,16 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import React, { useContext, useState } from 'react'
-import { AuthContext } from '../context/AuthContext';
-import { makeRequest } from '../api/axios';
+// OnPressLongMessage.js
 import { useQuery } from '@tanstack/react-query';
-import Avatar from './Avatar';
+import React from 'react';
+import { Modal, View, Image, Pressable, Text, StyleSheet, Dimensions, StatusBar, SafeAreaView } from 'react-native';
+import { makeRequest } from '../api/axios';
 import { hp, wp } from '../helpers/common';
-import Sticker from './Sticker';
+import Avatar from './Avatar';
 import PictureInMessage from './PictureInMessage';
-import OnPressLongMessage from './OnPressLongMessage';
+import Sticker from './Sticker';
+
 const sizeAvatar = hp(5)
 const sizeSticker = wp(25)
-const Message = ({ mess }) => {
-    const { currentUser } = useContext(AuthContext)
-
-    const typemess = mess?.username === currentUser?.username ? 'sent' : 'received';
+const OnPressLongMessage = ({ visible, mess, typemess, onClose }) => {
     const { isLoading: isll, error: err, data: dataUserMess } = useQuery({
         queryKey: ["user", mess?.username], queryFn: () =>
             makeRequest.get("/users/" + mess?.username).then((res) => {
@@ -26,38 +23,56 @@ const Message = ({ mess }) => {
                 return res.data;
             })
     })
-    const [showModal, setShowModal] = useState(false);
     return (
-
-        <View style={styles.messageCard}>
-            {typemess === 'received' ? (
-                mess.last === 'last' ? (
-                    <View style={{ width: sizeAvatar, height: sizeAvatar }}>
-                        <Avatar size={sizeAvatar} link={dataUserMess?.pic_avatar} />
-                    </View>
-                ) : (
-                    <View style={{ width: sizeAvatar, height: sizeAvatar }} />
-                )
-            ) : (
-                <View style={{ width: sizeAvatar }} />
-            )}
-            {/* <Pressable onLongPress={() => setShowModal(true)}> */}
-            {mess?.type_message === 'sticker' ?
-                <View style={[styles.sticker, styles[`sticker-${typemess}`]]}>
-                    <Sticker size={sizeSticker} link={sticker?.link} idSticker={mess?.id_sticker} />
-                </View> :
-                mess?.type_message === 'image' ?
-                    <View style={[styles.image, styles[`sticker-${typemess}`]]}>
-                        <PictureInMessage link={mess?.link_image} />
+        <Modal
+            visible={visible}
+            transparent={false}
+            animationType="fade"
+            onRequestClose={onClose}
+            backdropColor='transparent'
+            presentationStyle="overFullScreen"
+            statusBarTranslucent={true}          // ⬅ Android cần cái này
+        >
+            <View style={{
+                ...StyleSheet.absoluteFillObject,
+                backgroundColor: 'rgba(0,0,0,0.75)', // darken ảnh
+            }} />
+            <View style={styles.messageCard}>
+                {mess?.type_message === 'sticker' ?
+                    <View style={[styles.sticker, styles[`sticker-${typemess}`]]}>
+                        <Sticker size={sizeSticker} link={sticker?.link} idSticker={mess?.id_sticker} />
                     </View> :
-                    <Text style={[styles.message, styles[`message-${typemess}`]]}>{mess?.content}</Text>}
-        </View>
-    )
-}
-
-export default Message
+                    mess?.type_message === 'image' ?
+                        <View style={[styles.image, styles[`sticker-${typemess}`]]}>
+                            <PictureInMessage link={mess?.link_image} />
+                        </View> :
+                        <Text style={[styles.message, styles[`message-${typemess}`]]}>{mess?.content}</Text>}
+            </View>
+        </Modal>
+    );
+};
 
 const styles = StyleSheet.create({
+    fullScreenContainer: {
+        ...StyleSheet.absoluteFillObject, // ⬅ phủ full màn
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    safeArea: {
+        position: 'absolute',
+        top: 25,
+        left: 0,
+        right: 0,
+        zIndex: 10, // đảm bảo ở trên cùng
+    },
+    closeButton: {
+        alignSelf: 'flex-end',
+        padding: 12,
+    },
+    closeText: {
+        fontSize: 22,
+        color: 'white',
+    },
     messageCard: {
         gap: 10,
         alignItems: 'flex-end',
@@ -111,4 +126,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-})
+});
+
+export default OnPressLongMessage;

@@ -22,6 +22,7 @@ export const theme = {
     fonts: {
         medium: '500',
         semibold: '600',
+        nearbold:'680',
         bold: '700',
         extraBold: '800',
     },

@@ -1,19 +1,20 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import Header from '../components/Header'
 import SrceenWrapper from '../components/SrceenWrapper'
-import { hp } from '../helpers/common'
+import { hp, wp } from '../helpers/common'
 import { theme } from '../constants/theme'
 import Icon from '../assets/icons'
 import Avatar from '../components/Avatar'
 import { useRouter } from 'expo-router'
 import { AuthContext } from '../context/AuthContext'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { makeRequest } from '../api/axios'
 import { SocketContext, useSocket } from '../context/SocketContext'
+import { LinkingContext } from '@react-navigation/native'
 
 const Conversations = () => {
-    const [select, setSelect] = useState(0);
+    const [select, setSelect] = useState(1);
     const getConversations = () => {
         setSelect(0);
     }
@@ -29,7 +30,7 @@ const Conversations = () => {
             case 0:
                 return <ListConversations />;
             case 1:
-                return <Text>Friends</Text>;
+                return <ListFriends />;
             case 2:
                 return <Text>Menu</Text>;
             default:
@@ -75,11 +76,11 @@ const Conversations = () => {
     )
 }
 const ListConversations = () => {
-    const listmess = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+
     const { currentUser } = useContext(AuthContext)
     const { isLoading, error, data } = useQuery({
         queryKey: ["rooms", currentUser?.username], queryFn: () =>
-            makeRequest.get("/rooms/user?username=" + currentUser?.username).then((res) => {
+            makeRequest.get("/rooms/user").then((res) => {
                 return res.data;
             })
     })
@@ -107,7 +108,7 @@ const ItemConversation = ({ conversation, socket }) => {
                 return res.data;
             })
     })
-    const lastMess =  data?.[data.length - 1] || null;
+    const lastMess = data?.[data.length - 1] || null;
     const lastSent = lastMess?.username === currentUser?.username ? "Bạn" : lastMess?.name || "";
     // const [lastSent, setLastSent] = useState('')
     // useEffect(() => {
@@ -150,10 +151,97 @@ const ItemConversation = ({ conversation, socket }) => {
             </View>
             <View style={styles.contentDialog}>
                 <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">{filteredMembers?.map(m => m.name).join(', ')}</Text>
-                <Text style={styles.lastMessageInDialog} numberOfLines={1} ellipsizeMode="tail">{lastSent}{lastMess?.content ? `: ${lastMess.content}` : ''}</Text>
+                <Text style={styles.lastMessageInDialog} numberOfLines={1} ellipsizeMode="tail">{lastSent}{lastMess ? lastMess.type_message === 'sticker' ? ': <Sticker>' : lastMess.type_message === 'image' ? ': <Image>' : `: ${lastMess.content}` : ''}</Text>
             </View>
             <View style={styles.status}>
                 <Icon name='dot' color={theme.colors.mess} size={15} />
+            </View>
+        </TouchableOpacity>
+    )
+}
+
+const ListFriends = ({ }) => {
+   
+    const { currentUser } = useContext(AuthContext)
+    const { isLoading, error, data } = useQuery({
+        queryKey: ["friends", currentUser?.username], queryFn: () =>
+            makeRequest.get("/relationships/friends").then((res) => {
+                return res.data;
+            })
+    })
+    return (
+        <ScrollView
+            style={[{ flex: 1, }]}
+            contentContainerStyle={{ gap: 0, paddingHorizontal: 8 }}
+        >
+            {data?.map((fr, index) => (
+                <ItemFriend key={index} friend={fr} />
+            ))}
+        </ScrollView>
+    )
+}
+const ItemFriend = ({ friend }) => {
+    const router = useRouter()
+    const { isLoading: il, error: e, data: member } = useQuery({
+        queryKey: ["memberChat", 3], queryFn: () =>
+            makeRequest.get("/rooms/members?roomId=3").then((res) => {
+                return res.data ?? null;
+            }),
+        enabled: !!friend?.username,
+    })
+    const { isLoading, error, data } = useQuery({
+        queryKey: ["RoomOfYou", friend?.username], queryFn: () =>
+            makeRequest.get("/rooms/getRoom?username=" + friend?.username).then((res) => {
+                return res.data;
+            })
+    })
+    const queryClient = useQueryClient()
+    const mutationAddRoom = useMutation({
+        mutationFn: () => makeRequest.post(`/rooms/addRoom`, friend),
+        onSuccess: (res) => {
+            // Làm mới dữ liệu sau khi mutation thành công
+            queryClient.invalidateQueries({ queryKey: ['RoomOfYou', friend?.username] });
+            router.push({
+                pathname: 'messages',
+                params: { roomMessage: JSON.stringify(res) },
+            });
+        },
+        onError: (error) => {
+            console.warn("Mutation failed:", error);
+        },
+    })
+    const addRoom = () => {
+        mutationAddRoom.mutate();
+    }
+
+    const onMessRoom = () => {
+        if (data?.length > 0) {
+            router.push({
+                pathname: 'messages',
+                params: { roomMessage: JSON.stringify(data) },
+            });
+        } else {
+            addRoom()
+        }
+    }
+
+
+
+    return (
+        <TouchableOpacity style={styles.itemConversationContainer} onPress={() => onMessRoom()}>
+            <View style={styles.avatarForm}>
+                <Avatar size={sizeAvatarDialog - 15} link={friend ? friend?.link : null} />
+            </View>
+            <View style={styles.nameFriend}>
+                <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">{friend?.name}</Text>
+            </View>
+            <View style={styles.callVideo}>
+                <TouchableOpacity style={styles.itemCV}>
+                    <Icon name='call' color={theme.colors.mess} strokeWidth={0.25} size={28} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.itemCV}>
+                    <Icon name='video' color={theme.colors.mess} size={28} />
+                </TouchableOpacity >
             </View>
         </TouchableOpacity>
     )
@@ -231,5 +319,24 @@ const styles = StyleSheet.create({
         borderTopWidth: 0.25,
         borderColor: '#ccc',
         borderCurve: 'continuous',
+    },
+    nameFriend: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: 5,
+        paddingHorizontal: 8
+    },
+    callVideo: {
+        width: wp(28),
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    itemCV: {
+        flex: 1,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 })

@@ -35,7 +35,7 @@ const PictureInMessage = ({ link }) => {
                     height: size.height,
                     borderRadius: 8,
                 }]}>
-                <Image style={styles.avatarImage} resizeMode='contain' source={link ? { uri: link } : require('../assets/images/picture1.jpg')} />
+                <Image style={styles.avatarImage} resizeMode='contain' source={link ? { uri: link } : require('../assets/images/picture1.png')} />
             </Pressable>
             {/* Full Screen Modal */}
             <FullScreenImage

@@ -216,7 +216,7 @@ const UserHeader = ({ loading, onBackPress, onSubmit }) => {
     return (
         <View style={styles.header}>
             <View>
-                <Header title="Edit Profile" showBackButton={true} onBackPress={onBackPress} />
+                <Header title="New Post" showBackButton={true} onBackPress={onBackPress} />
                 {loading ? <View style={[styles.postButton]}>
                     <ActivityIndicator size='small' color={theme.colors.check} />
                 </View> : <TouchableOpacity style={styles.postButton} onPress={onSubmit}>

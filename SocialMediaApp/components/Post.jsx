@@ -16,6 +16,7 @@ import Icon from "../assets/icons";
 import RenderHtml from 'react-native-render-html';
 import { useRouter } from "expo-router";
 import { AuthContext } from "../context/AuthContext";
+import { theme } from "../constants/theme";
 const Post = ({ data }) => {
   const { isLoading: isImg, error: errImg, data: datImg } = useQuery({
     queryKey: ["imgs", data?.id], queryFn: () =>
@@ -23,9 +24,17 @@ const Post = ({ data }) => {
         return res.data;
       })
   })
+
   const { isLoading: islike, error: errlike, data: dataLike } = useQuery({
     queryKey: ["like", data?.id], queryFn: () =>
       makeRequest.get("/likes?postId=" + data?.id).then((res) => {
+        return res.data;
+      })
+  })
+
+  const { isLoading: isComment, error: isError, data: cmts } = useQuery({
+    queryKey: ["comment", data?.id], queryFn: () =>
+      makeRequest.get("/comments?postId=" + data?.id).then((res) => {
         return res.data;
       })
   })
@@ -63,7 +72,12 @@ const Post = ({ data }) => {
       });
     },
   });
-
+  const handleToDetailPost = () => {
+    router.push({
+      pathname: 'detailPost',
+      params: { postParam: JSON.stringify({ id: data?.id }) },
+    });
+  }
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -81,18 +95,22 @@ const Post = ({ data }) => {
       </Pressable>
       {/* Content */}
       <View style={styles.body}>
-        <RenderHtml
-          tagsStyles={{
-            body: {
-              fontSize: 14.5,     // chỉnh size chữ
-              padding: 0,      // padding toàn bộ
-              margin: 0,        // bỏ margin mặc định
-            },
-          }}
-          contentWidth={width}
-          source={{ html: data?.desc }}
-        />
-
+        <Pressable style={{
+          padding: 0,      // padding toàn bộ
+          margin: 0,        // bỏ margin mặc định
+        }} onPress={()=>handleToDetailPost()}>
+          <RenderHtml
+            tagsStyles={{
+              body: {
+                fontSize: 17,     // chỉnh size chữ
+                padding: 0,      // padding toàn bộ
+                margin: 0,        // bỏ margin mặc định
+              },
+            }}
+            contentWidth={width}
+            source={{ html: data?.desc }}
+          />
+        </Pressable>
         {datImg?.length > 0 && <PictureInPost dataImg={datImg} />}
       </View>
 
@@ -107,10 +125,10 @@ const Post = ({ data }) => {
           <Text>{dataLike?.length}</Text>
         </View>
         <View style={styles.iconInPost}>
-          <Pressable>
+          <Pressable onPress={() => handleToDetailPost()}>
             <Icon name='comment' color='#ccc' size='20' />
           </Pressable>
-          <Text>150</Text>
+          <Text>{cmts?.length}</Text>
         </View>
         <View style={styles.iconInPost}>
           <Pressable>
@@ -240,6 +258,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     padding: 12,
+    paddingBottom: 5,
     marginVertical: 8,
     borderRadius: 8,
   },
@@ -253,7 +272,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   name: {
-    fontWeight: "600",
+    fontWeight: theme.fonts.bold,
     fontSize: 16,
   },
   subText: {
@@ -277,7 +296,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingTop: 8,
+    paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: "#eee",
     height: hp(5)
