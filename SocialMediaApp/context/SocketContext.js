@@ -12,7 +12,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (currentUser?.username) {
-      socketRef.current = io("http://192.168.1.7:8900");
+      socketRef.current = io("http://192.168.1.2:8900");
       setSocket(socketRef.current);
 
       socketRef.current.emit("login", currentUser.username);
@@ -36,7 +36,13 @@ export const SocketProvider = ({ children }) => {
       }
     };
   }, [currentUser]);
-
+  // useEffect(() => {
+  //   if (socket) {
+  //     socket.on("getUsers", (users) => {
+  //       console.log('users:', users);
+  //     })
+  //   };
+  // }, [socket]);
   return (
     <SocketContext.Provider value={socket}>
       {children}

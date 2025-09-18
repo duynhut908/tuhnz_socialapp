@@ -36,6 +36,18 @@ import NewImage from './NewImage';
 import Sticker from './Sticker';
 import Conversation from './Conversation';
 import Dot from './Dot';
+import MoreStraight from './MoreStraight';
+import Report from './Report';
+import Return from './Return';
+import Volume from './Volume';
+import Micro from './Micro';
+import Premium from './Premium';
+import Event from './Event';
+import Market from './Market';
+import Storage from './Storage';
+import Page from './Page';
+import Group from './Group';
+import Setting from './Setting';
 const icons = {
     home: Home,
     arrowleft: ArrowLeft,
@@ -51,6 +63,7 @@ const icons = {
     logout: Logout,
     mail: Mail,
     more: More,
+    moreStraight: MoreStraight,
     plus: Plus,
     search: Search,
     send: Send,
@@ -71,7 +84,18 @@ const icons = {
     newImg: NewImage,
     sticker: Sticker,
     conversation: Conversation,
-    dot: Dot
+    dot: Dot,
+    report: Report,
+    return: Return,
+    volume: Volume,
+    micro: Micro,
+    premium: Premium,
+    event: Event,
+    market: Market,
+    storage: Storage,
+    page: Page,
+    group: Group,
+    setting: Setting
 }
 
 const Icon = ({ name, ...props }) => {

@@ -51,13 +51,13 @@ const homeapp = () => {
         setSelect(0)
     }
     const onPressFriends = () => {
-        setSelect(1)
+        router.push('relationship')
     }
     const onPressNotify = () => {
         setSelect(2)
     }
     const onPressMenu = () => {
-        setSelect(3)
+       router.push('menumore')
     }
 
     const renderContent = () => {

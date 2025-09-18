@@ -13,7 +13,7 @@ const Sticker = ({ size, link, idSticker, onPress }) => {
                     height: size,
                     borderRadius: 8,
                 }]}>
-                <Image style={styles.avatarImage} resizeMode='cover' source={link ? { uri: link } : require('../assets/images/picture1.jpg')} />
+                <Image style={styles.avatarImage} resizeMode='cover' source={link ? { uri: link } : require('../assets/images/picture1.png')} />
             </Pressable>
         </>
     )

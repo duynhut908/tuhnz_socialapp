@@ -1,4 +1,4 @@
-import { View, Text, Image, StyleSheet, Pressable, useWindowDimensions, Animated } from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, useWindowDimensions, Animated, TouchableOpacity, Alert, FlatList } from "react-native";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Video } from 'expo-av';
 import { VideoFullscreenUpdate } from 'expo-av';
@@ -6,7 +6,7 @@ import moment from 'moment'
 import { makeRequest } from "../api/axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Avatar from "./Avatar";
-import { hp } from "../helpers/common";
+import { hp, wp } from "../helpers/common";
 import Picture from "./Picture";
 import { Ionicons } from "@expo/vector-icons";
 // import VideoPlayer from 'react-native-video-controls';
@@ -17,7 +17,7 @@ import RenderHtml from 'react-native-render-html';
 import { useRouter } from "expo-router";
 import { AuthContext } from "../context/AuthContext";
 import { theme } from "../constants/theme";
-const Post = ({ data }) => {
+const Post = ({ data, nagiv = true }) => {
   const { isLoading: isImg, error: errImg, data: datImg } = useQuery({
     queryKey: ["imgs", data?.id], queryFn: () =>
       makeRequest.get("/posts/images/" + data?.id).then((res) => {
@@ -31,7 +31,6 @@ const Post = ({ data }) => {
         return res.data;
       })
   })
-
   const { isLoading: isComment, error: isError, data: cmts } = useQuery({
     queryKey: ["comment", data?.id], queryFn: () =>
       makeRequest.get("/comments?postId=" + data?.id).then((res) => {
@@ -73,11 +72,90 @@ const Post = ({ data }) => {
     },
   });
   const handleToDetailPost = () => {
-    router.push({
+    if (nagiv) router.push({
       pathname: 'detailPost',
       params: { postParam: JSON.stringify({ id: data?.id }) },
     });
   }
+  const deletePostMutation = useMutation({
+    mutationFn: () => {
+      if (data) {
+        return makeRequest.delete("/posts/delete", { data })
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["posts", currentUser]
+      });
+
+      if (!nagiv) router.back()
+    }
+  })
+  const handleDeletePost = () => {
+
+    if (data) {
+      Alert.alert('Confirm', "Are you sure you want to delete this post?", [
+        {
+          text: 'Cancel',
+          onPress: () => {
+            console.log('canceled delete post');
+            setOpenMore((prev) => !prev)
+          },
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          onPress: () => deletePostMutation.mutate(),
+          style: 'destructive'
+        }
+      ])
+    }
+  }
+
+  const { isLoading: isReport, error: errReport, data: report } = useQuery({
+    queryKey: ["report", data?.id], queryFn: () =>
+      makeRequest.get("/posts/report/" + data?.id).then((res) => {
+        return res.data;
+      })
+  })
+  const reportPostMutation = useMutation({
+    mutationFn: () => {
+      if (data) {
+        return makeRequest.post("/posts/report", data)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["posts", currentUser]
+      });
+      setOpenMore((prev) => !prev)
+      if (!nagiv) router.back()
+    }
+  })
+  const handleReportPost = () => {
+    if (data && !report?.some(rep => rep?.username_report === currentUser?.username)) {
+      Alert.alert('Confirm', "Are you sure you want to report this post?", [
+        {
+          text: 'Cancel',
+          onPress: () => {
+            console.log('canceled report post');
+            setOpenMore((prev) => !prev)
+          },
+          style: 'cancel'
+        },
+        {
+          text: 'Report',
+          onPress: () => reportPostMutation.mutate(),
+          style: 'destructive'
+        }
+      ])
+    }
+    else {
+      Alert.alert('You reported this post!')
+      setOpenMore((prev) => !prev)
+    }
+  }
+  const [openMore, setOpenMore] = useState(false)
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -86,19 +164,23 @@ const Post = ({ data }) => {
         params: { user: JSON.stringify(data) },
       })}>
         <Avatar size={hp(5)} link={data?.avatar} />
-        <View style={{ marginLeft: 10 }}>
-          <Text style={styles.name}>{data?.name}</Text>
+        <View style={{ marginHorizontal: 10, flex: 1 }}>
+          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{data?.name}</Text>
           <Text style={styles.subText}>
             {moment(data?.createAt).fromNow()}
           </Text>
         </View>
+        <TouchableOpacity style={{ justifyContent: 'flex-start', alignItems: 'center', width: wp(8) }} onPress={() => setOpenMore((prev) => !prev)}>
+          <Icon name={openMore ? 'return' : 'more'} color={'#888'} size={25} />
+        </TouchableOpacity>
+
       </Pressable>
       {/* Content */}
       <View style={styles.body}>
         <Pressable style={{
           padding: 0,      // padding toàn bộ
           margin: 0,        // bỏ margin mặc định
-        }} onPress={()=>handleToDetailPost()}>
+        }} onPress={() => handleToDetailPost()}>
           <RenderHtml
             tagsStyles={{
               body: {
@@ -111,7 +193,27 @@ const Post = ({ data }) => {
             source={{ html: data?.desc }}
           />
         </Pressable>
-        {datImg?.length > 0 && <PictureInPost dataImg={datImg} />}
+        {datImg?.length > 0 && <PictureInPost dataImg={datImg} handleToDetailPost={handleToDetailPost} nagiv={nagiv} />}
+        {
+          openMore && (
+            <>
+              {data?.username === currentUser?.username ?
+                < View style={styles.coverbody} >
+                  < TouchableOpacity style={{ flexDirection: 'row', gap: 5, justifyContent: 'center', alignItems: 'center' }} onPress={() => handleDeletePost()}>
+                    <Icon name='delete' size={30} color='red' />
+                    <Text style={{ fontSize: 18 }}>Delete</Text>
+                  </TouchableOpacity>
+                </View> :
+                < View style={styles.coverbody} onPress={() => handleReportPost()}>
+                  < TouchableOpacity style={{ flexDirection: 'row', gap: 5, justifyContent: 'center', alignItems: 'center' }} onPress={() => handleReportPost()}>
+                    <Icon name='report' size={30} color='blue' />
+                    <Text style={{ fontSize: 18 }}>Report</Text>
+                  </TouchableOpacity>
+                </View>
+              }
+            </>
+          )
+        }
       </View>
 
       {/* Footer */}
@@ -137,12 +239,12 @@ const Post = ({ data }) => {
           <Text>150</Text>
         </View>
       </View>
-    </View>
+    </View >
   );
 };
 const maxDisplay = 3;
-const sizePic = hp(13.5)
-const PictureInPost = ({ user, router, dataImg }) => {
+const sizePic = wp(27)
+const PictureInPost = ({ user, router, dataImg, handleToDetailPost, nagiv }) => {
   const videoRef = useRef(null);
   // const [isFullscreen, setIsFullscreen] = useState(false);
   // let lastTap = null;
@@ -169,7 +271,7 @@ const PictureInPost = ({ user, router, dataImg }) => {
 
   return (
     <View style={{ gap: 15 }}>
-      <View style={styles.someImage}>
+      {nagiv ? (<View style={styles.someImage}>
         {displayImages.map((_, index) => {
           const img = dataImg[index];
           const isLast = index === maxDisplay - 1 && dataImg.length > maxDisplay;
@@ -179,24 +281,6 @@ const PictureInPost = ({ user, router, dataImg }) => {
 
               {img.type === 'image' ? <Picture size={sizePic} link={img.link} /> :
                 img.type === 'video' ?
-                  // <Video
-                  //   //ref={videoRef}
-                  //   style={{ flex: 1, height: sizePic, width: sizePic, borderRadius: 8, }}
-                  //   source={{ uri: img.link }}
-                  //   useNativeControls
-                  //   resizeMode='cover'
-                  //   isLooping
-                  // /> : 
-                  // <VideoPlayer
-                  //   source={{ uri: img.link }}
-                  //   style={{ height: sizePic, width: sizePic, borderRadius: 8,}}
-                  //   resizeMode="cover"
-                  //   repeat={true}           // thay cho isLooping
-                  //   disableBack={true}      // ẩn nút back mặc định
-                  //   disableVolume={true}    // có thể tắt nút volume nếu muốn
-                  //   disableFullscreen={false} // giữ nút fullscreen
-                  //   showOnStart={false}     // ẩn control khi load
-                  // /> :
                   <VideoPlayer
                     videoProps={{
                       ref: videoRef,
@@ -241,14 +325,57 @@ const PictureInPost = ({ user, router, dataImg }) => {
                   <Text>Không định dạng được</Text>
               }
               {isLast && (
-                <View style={styles.plusOverlay}>
+                <TouchableOpacity style={styles.plusOverlay} onPress={() => handleToDetailPost()}>
                   <Text style={styles.plusText}>+{dataImg.length - maxDisplay}</Text>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
           );
         })}
-      </View>
+      </View>) : (
+        <View style={{ paddingHorizontal: 10 }}>
+          <FlatList
+            data={dataImg}
+            keyExtractor={(_, index) => index.toString()}
+            numColumns={3}
+            columnWrapperStyle={{ gap: 2.5 }}   // khoảng cách ngang giữa các cột
+            ItemSeparatorComponent={() => <View style={{ height: 2.5 }} />} // khoảng cách dọc giữa các hàng
+            renderItem={({ item }) => (
+              <View style={styles.gridImage}>
+                {
+                  item.type === 'image' ? (
+                    <Picture size={sizePic} link={item.link} />
+                  ) : item.type === 'video' ? (
+                    <VideoPlayer
+                      videoProps={{
+                        ref: videoRef,
+                        shouldPlay: false,
+                        source: { uri: item.link },
+                        isLooping: true,
+                        resizeMode: 'cover',
+                      }}
+                      style={{ height: sizePic, width: sizePic, borderRadius: 8 }}
+                    />
+                  ) : (
+                    <Text>Không định dạng được</Text>
+                  )
+                }
+              </View>
+            )
+            }
+          />
+        </View>
+
+      )
+      }
+    </View >
+  )
+}
+
+const MoreInteract = () => {
+  return (
+    <View>
+
     </View>
   )
 }
@@ -265,6 +392,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+
   },
   avatar: {
     width: 40,
@@ -281,7 +409,7 @@ const styles = StyleSheet.create({
   },
   body: {
     marginVertical: 10,
-    gap: 10
+    gap: 10,
   },
   contentText: {
     fontSize: 14,
@@ -320,6 +448,12 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 8,
   },
+  gridImage: {
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+
+  },
   plusOverlay: {
     ...StyleSheet.absoluteFillObject, // phủ toàn bộ view
     backgroundColor: 'rgba(0,0,0,0.5)', // nền bán trong suốt
@@ -332,4 +466,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: hp(2.5),
   },
+  moreInteract: {
+    position: 'absolute',
+    width: hp(8),
+    height: hp(6),
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "white",
+    right: 24,
+    top: 40,
+    borderRadius: theme.radius.sm,
+    borderTopRightRadius: 0,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderCurve: 'continuous',
+    zIndex: 1000,
+    elevation: 1000
+  },
+  coverbody: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    minHeight: 50,
+    flexDirection: 'row',
+    gap: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "white",
+    borderRadius: theme.radius.sm,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderCurve: 'continuous',
+    zIndex: 1000,
+    elevation: 1000
+  }
 });

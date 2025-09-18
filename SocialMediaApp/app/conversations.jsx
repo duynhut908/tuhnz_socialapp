@@ -1,5 +1,5 @@
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import Header from '../components/Header'
 import SrceenWrapper from '../components/SrceenWrapper'
 import { hp, wp } from '../helpers/common'
@@ -12,9 +12,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { makeRequest } from '../api/axios'
 import { SocketContext, useSocket } from '../context/SocketContext'
 import { LinkingContext } from '@react-navigation/native'
+import ActionSheet from 'react-native-actionsheet';
 
 const Conversations = () => {
-    const [select, setSelect] = useState(1);
+    const [select, setSelect] = useState(0);
     const getConversations = () => {
         setSelect(0);
     }
@@ -28,9 +29,9 @@ const Conversations = () => {
     const renderContent = () => {
         switch (select) {
             case 0:
-                return <ListConversations />;
+                return <ListConversations socket={socket} onlineUsers={onlineUsers} />;
             case 1:
-                return <ListFriends />;
+                return <ListFriends onlineUsers={onlineUsers} />;
             case 2:
                 return <Text>Menu</Text>;
             default:
@@ -39,6 +40,16 @@ const Conversations = () => {
     };
 
 
+    const socket = useSocket();
+    const [onlineUsers, setOnlineUsers] = useState([]);
+
+    useEffect(() => {
+        if (socket) {
+            socket.on("getUsers", (users) => {
+                setOnlineUsers(users);
+            })
+        };
+    }, [socket]);
 
     return (
         <SrceenWrapper >
@@ -75,7 +86,8 @@ const Conversations = () => {
         </SrceenWrapper>
     )
 }
-const ListConversations = () => {
+const ListConversations = ({ socket, onlineUsers }) => {
+
 
     const { currentUser } = useContext(AuthContext)
     const { isLoading, error, data } = useQuery({
@@ -85,20 +97,19 @@ const ListConversations = () => {
             })
     })
 
-    const socket = useSocket();
     return (
         <ScrollView
             style={[{ flex: 1, }]}
             contentContainerStyle={{ gap: 0 }}
         >
             {data?.map((conversation, index) => (
-                <ItemConversation key={index} conversation={conversation} socket={socket} />
+                <ItemConversation key={index} conversation={conversation} socket={socket} onlineUsers={onlineUsers} />
             ))}
         </ScrollView>
     );
 }
 const sizeAvatarDialog = hp(11)
-const ItemConversation = ({ conversation, socket }) => {
+const ItemConversation = ({ conversation, socket, onlineUsers }) => {
     const router = useRouter();
 
     const { currentUser } = useContext(AuthContext)
@@ -144,24 +155,53 @@ const ItemConversation = ({ conversation, socket }) => {
             params: { roomMessage: JSON.stringify(member) },
         });
     }
+
+    const actionSheetRef = useRef();
+
+    const onLongPress = () => {
+        actionSheetRef.current?.show();
+    };
+    const handleAction = (index) => {
+        switch (index) {
+            case 0:
+                console.log("Chi tiết hội thoại");
+                break;
+            case 1:
+                console.log("Xóa hội thoại");
+                break;
+            default:
+                break;
+        }
+    };
+
     return (
-        <TouchableOpacity style={styles.itemConversationContainer} onPress={() => onMessRoom()}>
-            <View style={styles.avatarForm}>
-                <Avatar size={sizeAvatarDialog - 15} link={filteredMembers[0]?.pic_avatar} />
-            </View>
-            <View style={styles.contentDialog}>
-                <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">{filteredMembers?.map(m => m.name).join(', ')}</Text>
-                <Text style={styles.lastMessageInDialog} numberOfLines={1} ellipsizeMode="tail">{lastSent}{lastMess ? lastMess.type_message === 'sticker' ? ': <Sticker>' : lastMess.type_message === 'image' ? ': <Image>' : `: ${lastMess.content}` : ''}</Text>
-            </View>
-            <View style={styles.status}>
-                <Icon name='dot' color={theme.colors.mess} size={15} />
-            </View>
-        </TouchableOpacity>
+        <>
+            <TouchableOpacity style={styles.itemConversationContainer} onPress={() => onMessRoom()} onLongPress={onLongPress}>
+                <View style={styles.avatarForm}>
+                    <Avatar size={sizeAvatarDialog - 15} link={filteredMembers[0]?.pic_avatar} />
+                </View>
+                <View style={styles.contentDialog}>
+                    <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">{filteredMembers?.map(m => m.name).join(', ')}</Text>
+                    <Text style={styles.lastMessageInDialog} numberOfLines={1} ellipsizeMode="tail">{lastSent}{lastMess ? lastMess.type_message === 'sticker' ? ': <Sticker>' : lastMess.type_message === 'image' ? ': <Image>' : `: ${lastMess.content}` : ''}</Text>
+                </View>
+                <View style={styles.status}>
+                    {onlineUsers?.some(user => user?.username === filteredMembers[0]?.username) && filteredMembers?.length === 1 && <Icon name='dot' color={theme.colors.mess} size={15} />}
+                </View>
+            </TouchableOpacity>
+            <ActionSheet
+                ref={actionSheetRef}
+                title={'Tùy chọn'}
+                options={['Chi tiết', 'Xóa', 'Hủy']}
+                cancelButtonIndex={2}
+                destructiveButtonIndex={1}
+                onPress={handleAction}
+            />
+        </>
     )
 }
 
-const ListFriends = ({ }) => {
-   
+const ListFriends = ({ onlineUsers }) => {
+
     const { currentUser } = useContext(AuthContext)
     const { isLoading, error, data } = useQuery({
         queryKey: ["friends", currentUser?.username], queryFn: () =>
@@ -175,12 +215,12 @@ const ListFriends = ({ }) => {
             contentContainerStyle={{ gap: 0, paddingHorizontal: 8 }}
         >
             {data?.map((fr, index) => (
-                <ItemFriend key={index} friend={fr} />
+                <ItemFriend key={index} friend={fr} onlineUsers={onlineUsers} />
             ))}
         </ScrollView>
     )
 }
-const ItemFriend = ({ friend }) => {
+const ItemFriend = ({ friend, onlineUsers }) => {
     const router = useRouter()
     const { isLoading: il, error: e, data: member } = useQuery({
         queryKey: ["memberChat", 3], queryFn: () =>
@@ -224,8 +264,14 @@ const ItemFriend = ({ friend }) => {
             addRoom()
         }
     }
-
-
+    const onVideoRoom = () => {
+        if (friend) {
+            router.push({
+                pathname: 'videoCall',
+                params: { candidateVideoCall: JSON.stringify(friend) },
+            })
+        }
+    }
 
     return (
         <TouchableOpacity style={styles.itemConversationContainer} onPress={() => onMessRoom()}>
@@ -235,14 +281,14 @@ const ItemFriend = ({ friend }) => {
             <View style={styles.nameFriend}>
                 <Text style={styles.nameDialog} numberOfLines={1} ellipsizeMode="tail">{friend?.name}</Text>
             </View>
-            <View style={styles.callVideo}>
+            {onlineUsers?.some(user => user?.username === friend?.username) && <View style={styles.callVideo}>
                 <TouchableOpacity style={styles.itemCV}>
                     <Icon name='call' color={theme.colors.mess} strokeWidth={0.25} size={28} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.itemCV}>
+                <TouchableOpacity style={styles.itemCV} onPress={() => onVideoRoom()}>
                     <Icon name='video' color={theme.colors.mess} size={28} />
                 </TouchableOpacity >
-            </View>
+            </View>}
         </TouchableOpacity>
     )
 }

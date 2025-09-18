@@ -6,7 +6,7 @@ import { hp } from '../helpers/common'
 import Icon from '../assets/icons'
 import Header from '../components/Header'
 import { AuthContext } from '../context/AuthContext'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { makeRequest } from '../api/axios'
 import Post from '../components/Post'
 import Input_ver2 from '../components/Input_ver2'
@@ -18,6 +18,7 @@ const PostDetail = ({ }) => {
     const params = useLocalSearchParams(); // trả về object chứa tất cả params
     const note = JSON.parse(params.postParam);          // lấy giá trị note
     const postId = note?.id
+    
     const { currentUser } = useContext(AuthContext)
     const { isLoading, error, data: post } = useQuery({
         queryKey: ["postDetail", postId], queryFn: () =>
@@ -31,9 +32,26 @@ const PostDetail = ({ }) => {
                 return res.data;
             })
     })
-    const [loading, setLoading] = useState(false);
-    const onSubmit = () => {
 
+    const [loading, setLoading] = useState(false);
+    const [desc, setDesc] = useState()
+    const handleChange = (key, value) => {
+        setDesc(value)
+    }
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: (post) => makeRequest.post(`/comments`, post),
+        onSuccess: () => {
+            // Làm mới dữ liệu sau khi mutation thành công
+            queryClient.invalidateQueries({ queryKey: ['comment', postId] });
+        },
+        onError: (error) => {
+            console.error("Mutation failed:", error);
+        },
+    })
+    const onSubmit = () => {
+        if (desc.trim() !== "") mutation.mutate({ desc: desc, postId: postId });
+        setDesc("");
     }
     const listcomment = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
     const [open, setOpen] = useState(false);
@@ -58,6 +76,7 @@ const PostDetail = ({ }) => {
             hideSubscription.remove();
         };
     }, []);
+
     return (
         <SrceenWrapper>
             <KeyboardAvoidingView
@@ -92,14 +111,11 @@ const PostDetail = ({ }) => {
                         keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item }) => <Comment comment={item} />}
                         ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
-
                         ListHeaderComponent={
                             <>
                                 <View style={{ paddingHorizontal: 10 }}>
-                                    <Post data={post} />
+                                    <Post data={post} nagiv={false} />
                                 </View>
-
-
                                 {/* Label "Bình luận" */}
                                 {/* <DropDownPicker
                             open={open}
@@ -129,11 +145,9 @@ const PostDetail = ({ }) => {
                 </View>
                 {/* Ô nhập comment */}
                 <View style={styles.upComment}>
-                    <Input_ver2 containerStyles={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', }} />
+                    <Input_ver2 name='desc' placeholder='Let comment' onChangeText={handleChange} value={desc} containerStyles={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', }} />
                     <View style={styles.commentButton}>
-                        <TouchableOpacity
-                          
-                        >
+                        <TouchableOpacity>
                             <Icon
                                 name="sticker"
                                 size={32}

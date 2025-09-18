@@ -14,7 +14,7 @@ const _layout = () => {
             <SocketProvider>
                 <QueryClientProvider client={queryClient}>
                     <Stack
-                     // initialRouteName="detailPost" //chỉ set khác homeapp, set homeapp sẽ bị render 2 lần
+                   initialRouteName="menumore" //chỉ set khác homeapp, set homeapp sẽ bị render 2 lần
                         screenOptions={{
 
                             headerShown: false,
