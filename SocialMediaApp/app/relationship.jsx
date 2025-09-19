@@ -66,11 +66,12 @@ const ListFriends = ({ }) => {
                 return res.data;
             })
     })
+    console.log(data)
     return (
         <FlatList
             data={data}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <ItemFriend key={item.id} friend={item} />}
+            keyExtractor={(item) => item.username.toString()}
+            renderItem={({ item }) => <ItemFriend friend={item} />}
             contentContainerStyle={{ paddingHorizontal: 8 }}
         />
     )
@@ -116,7 +117,7 @@ const ListFollowing = ({ }) => {
     return (
         <FlatList
             data={data}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.username.toString()}
             renderItem={({ item }) => <ItemFollowing friend={item} />}
             contentContainerStyle={{ paddingHorizontal: 8 }}
         />
@@ -163,7 +164,7 @@ const ListFollower = ({ }) => {
     return (
         <FlatList
             data={data}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.username.toString()}
             renderItem={({ item }) => <ItemFollower friend={item} />}
             contentContainerStyle={{ paddingHorizontal: 8 }}
         />

@@ -27,7 +27,7 @@ const FullScreenImage = ({ visible, link, onClose }) => {
                         height: hp(100),
                         resizeMode: 'contain',
                     }}
-                    source={link ? { uri: link } : require('../assets/images/picture1.jpg')}
+                    source={link ? { uri: link } : require('../assets/images/picture1.png')}
                 />
                 {/* Nút thoát */}
                 <SafeAreaView style={styles.safeArea}>

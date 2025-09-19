@@ -123,6 +123,7 @@ const newPost = () => {
         onSuccess: () => {
             // Làm mới dữ liệu sau khi mutation thành công
             queryClient.invalidateQueries({ queryKey: ['posts', currentUser] });
+            queryClient.invalidateQueries({ queryKey: ["pictureOfUser", currentUser?.username] });
         },
         onError: (error) => {
             console.error("Mutation failed:", error);

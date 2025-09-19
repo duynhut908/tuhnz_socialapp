@@ -63,7 +63,7 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
 
   const { isLoading: il, error, data: listAvatars } = useQuery({
     queryKey: ["all-avatar", currentUser?.username], queryFn: () =>
-      makeRequest.get("/users/all-avatar").then((res) => {
+      makeRequest.get("/users/all-avatar/" + currentUser?.username).then((res) => {
         return res.data;
       }),
     enabled: !!currentUser?.username,
@@ -71,6 +71,7 @@ const ManagerMyAvatar = ({ currentUser, setCurrentUser, setDelImg }) => {
   const getAvatarById = (id) => {
     return listAvatars.find(item => item.id === id);
   };
+  
   const [select, setSelect] = useState(listAvatars?.find(item => item.current === 1)?.id)
   const [avatarForm, setAvatarForm] = useState(currentUser?.pic_avatar)
   const [avatarUp, setAvatarUp] = useState(null)

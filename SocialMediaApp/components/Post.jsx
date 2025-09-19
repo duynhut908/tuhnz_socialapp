@@ -17,7 +17,10 @@ import RenderHtml from 'react-native-render-html';
 import { useRouter } from "expo-router";
 import { AuthContext } from "../context/AuthContext";
 import { theme } from "../constants/theme";
+import VideoDiv from "./VideoDiv";
+import { useIsFocused } from "@react-navigation/native";
 const Post = ({ data, nagiv = true }) => {
+
   const { isLoading: isImg, error: errImg, data: datImg } = useQuery({
     queryKey: ["imgs", data?.id], queryFn: () =>
       makeRequest.get("/posts/images/" + data?.id).then((res) => {
@@ -244,29 +247,10 @@ const Post = ({ data, nagiv = true }) => {
 };
 const maxDisplay = 3;
 const sizePic = wp(27)
-const PictureInPost = ({ user, router, dataImg, handleToDetailPost, nagiv }) => {
+const PictureInPost = ({ user, router, dataImg, handleToDetailPost, nagiv, }) => {
+  const isFocused = useIsFocused();
   const videoRef = useRef(null);
-  // const [isFullscreen, setIsFullscreen] = useState(false);
-  // let lastTap = null;
 
-  // const handleDoubleTap = async () => {
-  //   const now = Date.now();
-  //   if (lastTap && now - lastTap < 300) {
-  //     // double tap
-  //     if (isFullscreen) {
-  //       await videoRef.current.dismissFullscreenPlayer();
-  //       setIsFullscreen(false);
-  //     } else {
-  //       await videoRef.current.presentFullscreenPlayer();
-  //       setIsFullscreen(true);
-  //     }
-  //   }
-  //   lastTap = now;
-  // };
-  // const onLongPress = async () => {
-  //   Alert.alert("Long Press", "Bạn giữ lâu trên video");
-  //   await videoRef.current.presentFullscreenPlayer();
-  // };
   const displayImages = Array.from({ length: Math.min(dataImg.length, maxDisplay) });
 
   return (
@@ -275,58 +259,19 @@ const PictureInPost = ({ user, router, dataImg, handleToDetailPost, nagiv }) => 
         {displayImages.map((_, index) => {
           const img = dataImg[index];
           const isLast = index === maxDisplay - 1 && dataImg.length > maxDisplay;
+
           const [isFullscreen, setIsFullscreen] = useState(false);
           return (
-            <View key={index} style={styles.oneImage}>
+            <View key={index} style={styles.gridImage}>
 
               {img.type === 'image' ? <Picture size={sizePic} link={img.link} /> :
                 img.type === 'video' ?
-                  <VideoPlayer
-                    videoProps={{
-                      ref: videoRef,
-                      shouldPlay: false,
-                      source: { uri: img.link },
-                      isLooping: true,
-                      resizeMode: isFullscreen ? 'contain' : 'cover'
-                    }}
-                    slider={sizePic < 200 ? false : true}
-                    style={{ height: sizePic, width: sizePic, borderRadius: 8 }}
-                    fullscreen={{
-                      enterFullscreen: async () => {
-                        if (videoRef.current) {
-                          setIsFullscreen(true);
-                          await videoRef.current.presentFullscreenPlayer();
-                        }
-                      },
-                      exitFullscreen: async () => {
-                        if (videoRef.current) {
-                          await videoRef.current.dismissFullscreenPlayer();
-                          setIsFullscreen(false);
-                        }
-                      },
-                    }}
-                    icon={{
-                      play: (
-                        <Ionicons
-                          name="play"
-                          size={sizePic < 200 ? 30 : 40}
-                          color="white"
-                        />
-                      ),
-                      pause: (
-                        <Ionicons
-                          name="pause"
-                          size={sizePic < 200 ? 30 : 40}
-                          color="white"
-                        />
-                      ),
-                    }}
-                  /> :
+                  <VideoDiv item={img} isFocused={isFocused} sizeVid={sizePic} /> :
                   <Text>Không định dạng được</Text>
               }
               {isLast && (
                 <TouchableOpacity style={styles.plusOverlay} onPress={() => handleToDetailPost()}>
-                  <Text style={styles.plusText}>+{dataImg.length - maxDisplay}</Text>
+                  <Text style={styles.plusText}>+{dataImg.length - maxDisplay + 1}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -340,28 +285,20 @@ const PictureInPost = ({ user, router, dataImg, handleToDetailPost, nagiv }) => 
             numColumns={3}
             columnWrapperStyle={{ gap: 2.5 }}   // khoảng cách ngang giữa các cột
             ItemSeparatorComponent={() => <View style={{ height: 2.5 }} />} // khoảng cách dọc giữa các hàng
-            renderItem={({ item }) => (
-              <View style={styles.gridImage}>
-                {
-                  item.type === 'image' ? (
-                    <Picture size={sizePic} link={item.link} />
-                  ) : item.type === 'video' ? (
-                    <VideoPlayer
-                      videoProps={{
-                        ref: videoRef,
-                        shouldPlay: false,
-                        source: { uri: item.link },
-                        isLooping: true,
-                        resizeMode: 'cover',
-                      }}
-                      style={{ height: sizePic, width: sizePic, borderRadius: 8 }}
-                    />
-                  ) : (
-                    <Text>Không định dạng được</Text>
-                  )
-                }
-              </View>
-            )
+            renderItem={({ item }) => {
+              return (
+                <View style={styles.gridImage}>
+                  {
+                    item.type === 'image' ? (
+                      <Picture size={sizePic} link={item.link} />
+                    ) : item.type === 'video' ? (
+                      <VideoDiv item={item} isFocused={isFocused} />) : (
+                      <Text>Không định dạng được</Text>
+                    )
+                  }
+                </View>
+              )
+            }
             }
           />
         </View>
@@ -445,14 +382,16 @@ const styles = StyleSheet.create({
   oneImage: {
     height: sizePic,
     width: sizePic,
-    position: 'relative',
+
     borderRadius: 8,
+
+    overflow: 'hidden',
+    position: 'relative',
   },
   gridImage: {
     aspectRatio: 1,
     borderRadius: 8,
     overflow: 'hidden',
-
   },
   plusOverlay: {
     ...StyleSheet.absoluteFillObject, // phủ toàn bộ view

@@ -11,7 +11,7 @@ const MenuMore = () => {
     const router = useRouter()
     const { currentUser, handleLogout } = useContext(AuthContext)
     const defaultItems = [
-        { "label": "Home", "name": "home", "color": "#6abfdd", "fill": '#ccc', onPress: () => router.push('homeapp') },
+        { "label": "Home", "name": "home", "color": "#6abfdd", "fill": '#ccc', onPress: () => router.replace('homeapp') },
         {
             "label": "Profile", "name": "user", "color": "#ddb06a", "fill": '#ccc', onPress: () => router.push({
                 pathname: 'profile',
@@ -24,7 +24,12 @@ const MenuMore = () => {
                 params: { user: JSON.stringify(currentUser) },
             })
         },
-        { "label": "My Video", "name": "video", "color": "#c382f5", "fill": '#ccc' },
+        {
+            "label": "My Video", "name": "video", "color": "#c382f5", "fill": '#ccc', onPress: () => router.push({
+                pathname: 'album',
+                params: { user: JSON.stringify(currentUser) },
+            })
+        },
         { "label": "Relationship", "name": "friends", "color": "#dd6a99", "fill": '#ccc', onPress: () => router.push('relationship') },
         { "label": "Chat", "name": "messages", "color": "#5591e7", "fill": '#ccc', onPress: () => router.push('conversations') },
         { "label": "Page", "name": "page", "color": "#b0caef", "fill": '#ccc' },

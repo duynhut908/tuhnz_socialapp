@@ -122,7 +122,8 @@ const UserBody = ({ user, router }) => {
     else if (selectedTab === 'video') {
       // đảm bảo chỉ navigate khi có dữ liệu và component mount
       router.push({
-        pathname: 'pageA',
+        pathname: 'album',
+        params: { user: JSON.stringify(user) },
       });
       setSelectedTab("profile")
     }
