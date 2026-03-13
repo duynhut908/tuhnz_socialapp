@@ -28,9 +28,10 @@ const newPost = () => {
             setLoading(true); // Bắt đầu hiển thị loading
             const response = await cloudinaryUpload(formData);
             console.log("response" + response)
+            const moderationData = response.moderation;
             setImageList(prev => [
                 ...prev,
-                { url: response.secure_url, publicId: response.publicId, type: response.type }
+                { url: (moderationData && Array.isArray(moderationData) && moderationData.length > 0) && moderationData[0]?.status === 'approved' ? response.secure_url:'https://res.cloudinary.com/dg2x8dolt/image/upload/v1773389204/uploads/1773389203778-6cc1e802-1d23-453f-8e4c-e0f1041973ea.jpg', publicId: response.publicId, type: response.type }
             ]);
 
         } catch (error) {

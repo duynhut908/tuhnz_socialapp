@@ -218,13 +218,13 @@ const Tool = ({ setMessages, socket, filteredMembers, room, lastMessageRef, open
         try {
             setLoading(true); // Bắt đầu hiển thị loading
             const response = await cloudinaryUpload(formData);
-            console.log("response" + response.secure_url)
-
+            console.log("response: ", response.moderation)
+            const moderationData = response.moderation;
             const msg = {
                 username: currentUser?.username,
                 last: 'none',
                 type_sent: 'image',
-                link_image: response.secure_url
+                link_image: (moderationData && Array.isArray(moderationData) && moderationData.length > 0) && moderationData[0]?.status === 'approved' ? response.secure_url:'https://res.cloudinary.com/dg2x8dolt/image/upload/v1773389204/uploads/1773389203778-6cc1e802-1d23-453f-8e4c-e0f1041973ea.jpg'
             }
             socket?.emit('sendMessage', { message: msg, member: filteredMembers });
             setMessages((prevMessages) => [...prevMessages, msg]);
@@ -353,7 +353,7 @@ const StickerPanel = ({ setOpenSticker, socket, lastMessageRef, setMessages, roo
         } else {
         }
     }
-    const listSticker = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+    //const listSticker = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
     return (
         <View style={styles.stickerPanel}>
             <FlatList
@@ -367,16 +367,6 @@ const StickerPanel = ({ setOpenSticker, socket, lastMessageRef, setMessages, roo
                     />
                 )}
             />
-            {/* <FlatList
-                data={listSticker}
-                numColumns={4}
-                keyExtractor={(_, i) => i.toString()}
-                renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleSendSticker(item)}>
-                        <Image source={item} style={styles.stickerItem} />
-                    </TouchableOpacity>
-                )}
-            /> */}
         </View>
     )
 }
